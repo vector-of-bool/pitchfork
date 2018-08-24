@@ -105,7 +105,7 @@ following sections.
 : [[#tld.examples|examples/]]
 :: Directory for samples and examples.
 
-: [[#tld.third_party|third_party/]]
+: [[#tld.extern|extern/]]
 :: Directory for components to be used by the project, but not edited as part
     of the project.
 
@@ -116,30 +116,158 @@ following sections.
 :: Directory containing non-source code aspects of the project. This might
     include graphics and markup files
 
-: [[#tld.utils|utils/]]
+: [[#tld.tools|tools/]]
 :: Directory containing development utilities, such as build and refactoring
     scripts
 
 # Top-Level Directories # {#tld}
 
+Pitchfork specifies several top-level directories. Other directories SHOULD NOT
+be  present in the root directory, except for what is required by other tooling.
+
 ## `build/` ## {#tld.build}
 
-The `build/` directory is a special directory.
+The `build/` directory is special in that it MUST NOT be committed to a source
+control system. A user downloading the codebase SHOULD NOT see a `build/`
+directory present in the project root, but one may be created in the course of
+working with the software. The `_build/` directory is also reserved.
 
-## `src/` ## {#tld.src}
+Note: Some build systems may commandeer the `build/` directory for themselves.
+In this case, the directory `_build/` should be used in place of `build/`.
+
+The `build/` directory MAY be used for ephemeral build results. Other uses of
+the directory are not permitted.
+
+Creation of additional directories for build results in the root directory is
+not permitted.
+
+Note: Although multiple *root* directories are not allowed, the structure and
+layout of the `build/` directory is not prescribed. Multiple subdirectories of
+`build/` may be used to hold multiple build results of different configuration.
 
 ## `include/` ## {#tld.include}
 
+Note: The `include/` and [[#tld.src|src/]] directories are very closely
+related. Be sure to also read its section in addition to this one.
+
+The purpose of the `include/` directory is to hold *public API* headers.
+
+Note: If not distinguishing between *public* and *private* headers, instead
+use [[#tld.src|src/]] for *all source files*.
+
+The placement of files and directories in `include/` MUST adhere to the
+requirements described in [[#src-layout]].
+
+## `src/` ## {#tld.src}
+
+Note: The `src/` and [[#tld.include|include/]] directories are very closely
+related. Be sure to also read its section in addition to this one.
+
+The purpose of the `src/` directory is:
+
+1. To hold compilable source files (`.cpp` files)
+2. **If using an** [[#tld.include|include/]] **directory**, to hold private
+    headers (those header that project consumers should not consume).
+3. **Otherwise**, holds all headers.
+
+The placement of files and directories in `src/` MUST adhere to the requirements
+outlined in [[#src-layout]].
+
 ## `tests/` ## {#tld.tests}
+
+The presence of this directory is not required.
+
+The `tests/` directory is reserved for source files related to project tests.
+The structure and layout of this directory is not prescribed by this document.
+
+Project maintainers MUST provide a way for consumers to disable the compilation
+and running of tests, especially for the purpose of embedding.
 
 ## `examples/` ## {#tld.examples}
 
-## `third_party/` ## {#tld.third_party}
+The presence of this directory is not required.
+
+The `examples/` directory is reserved for source files related to example and
+sample usage of the project. The structure and layout of this directory is not
+prescribed by this document.
+
+Project maintainers MUST provide a way for consumers to disable the compilation
+fo examples and samples.
+
+## `extern/` ## {#tld.extern}
+
+The presence of this directory is not required.
+
+The `extern/` directory is reserved for embedding of external projects. Each
+embedded project should occupy a single subdirectory of `extern/`.
+
+`extern/` SHOULD NOT contain files other than those required by tooling.
+
+This directory MAY be automatically populated, either partially or completely,
+by tools (eg. `git` submodules) as part of a build process. In this case,
+projects MUST declare the auto-populated subdirectories as ignored by relevant
+source control systems.
+
+Subdirectories of `extern/` SHOULD NOT be modified as part of regular project
+development. Subdirectories should remain as close to their upstream source as
+possible.
 
 ## `extras/` ## {#tld.extras}
 
+The presence of this directory is not required.
+
+The `extras/` directory is designated for containing additional components for
+the project which build upon the main component(s). This may include components
+that are not part of the project's "default" build, or otherwise impose special
+requirements to be used.
+
+For example, the following might be candidates for `extra/` rather than regular
+components:
+
+1. "Language bindings" or extra libraries that provide integrations of the
+    project with programming languages or runtimes different from its own.
+2. "Platform bindings" or extra libraries (plugins) that integrate the project
+    with a particular platform. For example, a windowing library that needs to
+    understand how to talk with Windows, Quartz, X11, and Wayland would include
+    its platform integration implementations in this directory.
+3. "Contributed" components. Additional components that are contributed by the
+    project's users and included in upstream, but are not officially supported
+    by the project.
+4. Optional components that require additional dependencies, or may be
+    prohibitive to include for all users. For example, Qt's Webkit module is
+    prohibitively time consuming to build, and it requires the presence of
+    dependencies that are only required exactly for that one component.
+
+Each extra project component should occupy exactly one subdirectory of `extras/`,
+and the placement of files and directories in `extras/` MUST adhere to the
+requirements outlined in [[#subcomp-layout]].
+
+`extras/` SHOULD NOT contain files other than those required by tooling.
+
 ## `data/` ## {#tld.data}
 
-## `utils/` ## {#tld.utils}
+The presence of this directory is not required.
+
+The `data/` directory is designated for holding project files which should be
+included in revision control, but are not explicitly code. For example,
+graphics and localization files are not code in the same sense as the rest of
+the project, but are good candidates for inclusion in the `data/` directory.
+
+The structure and layout of this directory is not prescribed by this document.
+
+## `tools/` ## {#tld.tools}
+
+The presence of this directory is not required.
+
+The `tools/` directory is designated for holding extra scripts and tools related
+to developing and contributing to the project. For example, turn-key build
+scripts, linting scripts, code-generation scripts, test scripts, or other tools
+that may be useful to a project develop.
+
+The contents of this directory SHOULD NOT be relevant to a project consumer.
+
+# Source Tree Layout # {#src-layout}
+
+# Subcomponent Layout # {#subcomp-layout}
 
 # Open Questions # {#open-qs}
