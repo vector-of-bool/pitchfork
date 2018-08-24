@@ -1,0 +1,145 @@
+<pre class='metadata'>
+Title: The Pitchfork Layout (PFL)
+Shortname: cxx-pfl
+Level: 1
+Status: DREAM
+Group: WGNAMEORWHATEVER
+URL: https://vector-of-bool.github.io/psl.html
+Markup Shorthands: markdown yes
+Editor: Colby Pike, vectorofbool@gmail.com, https://vector-of-bool.github.io/
+Abstract: PFL a convention for laying out source, build, and resource files in a
+Abstract: filesystem to aide in uniformity, tooling, understandability, and
+Abstract: compartmentalization.
+</pre>
+
+# Introduction # {#intro}
+
+The phrase "it doesn't matter, just be consistent" has really harmed the C++
+community more than it has helped. "A foolish consistency," if you will.
+Developers' desire to keep their codebase unique and "special" has held back
+the development of tooling when every user insists that a tool support their
+own custom style.
+
+For some things, like where you put the opening brace, the difference might
+truly be insignificant. For other things, this isn't the case.
+
+One such thing is the layout of a project on a filesystem.
+
+Incongruous layouts not only harms tooling, they create unnecessary disparity,
+create friction during on-boarding of contributors, and present a huge burden to
+beginners for a task that shouldn't even take more than a few seconds of
+thought.
+
+For virtually all projects, they are some (maybe improper) subset of a few key
+components:
+
+- Compilable source files
+- Public headers
+- Private headers
+- Source files containing entry points (`main()` functions)
+- Documentation files
+- Tests
+- Samples and examples
+- External libraries which have been embedded within the project structure
+- "Add-ons" to the source (e.g. language bindings, optional plugins, platform
+    bindings)
+
+In addition, it is very common to see projects which subdivide themselves into
+subcomponents. These subcomponents may also have dependencies between
+each-other. Subcomponents greatly increase the complexity potential, but aren't
+completely out of the question. A project layout standard *must* be able to
+handle subdivided projects.
+
+## Files ## {#intro.files}
+
+PFL prescribes several files that SHOULD be present in the root of the project:
+
+- A `README` file SHOULD be present. It should be easily readable in plaintext,
+    but may use "enhanced" plaintext like Markdown or similar. It SHOULD
+    contain a description of the contents of the directory and subdirectories.
+- A `LICENSE` file MUST be present for projects that wish to redistribute
+    themselves. It MUST be plaintext (ie. not enhanced with markup).
+
+Tool-support files, such as `.gitignore` and `.clang-format`, MAY be present in
+this directory.
+
+Other files in the root directory must be pertinent to the build system of the
+project. Other files SHOULD NOT appear in the root of the project.
+
+## Directories ## {#intro.dirs}
+
+PFL prescribes several directories that SHOULD appear at the root of the project
+tree. Not all of the directories are required, but they have an assigned
+purpose, and no other directory in the filesystem may assume the role of one of
+these directories. That is, these directories must be the ones used if their
+purpose is required.
+
+Other directories SHOULD NOT appear at the root.
+
+Note: If you have a need not fulfilled by a PFL directory listed below, that is
+a bug in this specification, and I would love to hear from you! Before
+reporting, double-check that what you need isn't listed below and in the
+following sections.
+
+: [[#tld.build|build/]]
+:: A special directory that SHOULD NOT be considered part of the source of the
+    project. Used for storing ephemeral build results. MUST NOT be checked into
+    source control. If using source control, MUST be ignored using source
+    control ignore-lists.
+
+: [[#tld.src|src/]]
+:: Main compilable source location. MUST be present for projects with compiled
+    components and do not use subcomponents.
+
+    In the presence of [[#tld.include|include/]], also contains private
+    headers.
+
+: [[#tld.include|include/]]
+:: Directory for public headers. MAY be present. MAY be omitted for projects
+    that do not distinguish between private/public headers. MAY be omitted for
+    projects that use subcomponents.
+
+: [[#tld.tests|tests/]]
+:: Directory for tests.
+
+: [[#tld.examples|examples/]]
+:: Directory for samples and examples.
+
+: [[#tld.third_party|third_party/]]
+:: Directory for components to be used by the project, but not edited as part
+    of the project.
+
+: [[#tld.extras|extras/]]
+:: Directory containing extra/optional components for the project.
+
+: [[#tld.data|data/]]
+:: Directory containing non-source code aspects of the project. This might
+    include graphics and markup files
+
+: [[#tld.utils|utils/]]
+:: Directory containing development utilities, such as build and refactoring
+    scripts
+
+# Top-Level Directories # {#tld}
+
+## `build/` ## {#tld.build}
+
+The `build/` directory is a special directory.
+
+## `src/` ## {#tld.src}
+
+## `include/` ## {#tld.include}
+
+## `tests/` ## {#tld.tests}
+
+## `examples/` ## {#tld.examples}
+
+## `third_party/` ## {#tld.third_party}
+
+## `extras/` ## {#tld.extras}
+
+## `data/` ## {#tld.data}
+
+## `utils/` ## {#tld.utils}
+
+# Open Questions # {#open-qs}
