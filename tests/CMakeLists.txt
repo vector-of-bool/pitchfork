@@ -1,3 +1,5 @@
-add_executable(first-test my_test.cpp)
-target_link_libraries(first-test PRIVATE pf::pitchfork catch2::main)
+find_package(Catch2 2.3.0 REQUIRED)
+
+add_executable(first-test main.cpp my_test.cpp)
+target_link_libraries(first-test PRIVATE pf::pitchfork Catch2::Catch2)
 add_test(NAME first-test COMMAND first-test)

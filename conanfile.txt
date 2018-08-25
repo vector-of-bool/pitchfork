@@ -1,0 +1,5 @@
+[requires]
+catch2/2.3.0@bincrafters/stable
+
+[generators]
+cmake_paths
