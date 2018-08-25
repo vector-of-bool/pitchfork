@@ -2,7 +2,17 @@ cmake_minimum_required(VERSION 3.12)
 
 list(INSERT CMAKE_MODULE_PATH 0 "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-project(pitchfork VERSION 0.0.1 DESCRIPTION "Libraries and programs for working with Pitchfork Layout projects")
+project(pitchfork
+    VERSION 0.0.1
+    LANGUAGES C CXX
+    DESCRIPTION "Libraries and programs for working with Pitchfork Layout projects"
+    )
+
+# Ensure Conan deps are up-to-date
+find_package(Conan)
+if(Conan_FOUND)
+    conan_install(-b catch2)
+endif()
 
 # Include third-party components we need for the build
 add_subdirectory(third_party)
