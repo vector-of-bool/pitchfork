@@ -14,5 +14,5 @@ elseif(BUILD_VSCE)
         COMMENT "Building VSCode extension"
         WORKING_DIRECTORY "${vsce_root}"
         )
-    add_custom_target(pf-vsce ALL DEPENDS "${stamp}")
+    add_custom_target(pf-vsce DEPENDS "${stamp}")
 endif()
