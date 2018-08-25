@@ -25,6 +25,7 @@ if(NOT PF_VIRTUALENV_MODULE)
         execute_process(
             COMMAND "${py2}" -m "${try_mod}" --help
             OUTPUT_VARIABLE out
+            ERROR_VARIABLE out
             RESULT_VARIABLE retc
             )
         if(retc EQUAL 0)

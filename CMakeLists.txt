@@ -9,6 +9,7 @@ add_subdirectory(third_party)
 
 find_package(Filesystem REQUIRED)
 find_package(Bikeshed)
+find_package(Yarn)
 
 if(NOT Bikeshed_FOUND)
     message(STATUS "No Bikeshed executable, so we will not generate the spec document")
@@ -27,3 +28,5 @@ option(BUILD_EXAMPLES "Build examples" ON)
 if(BUILD_EXAMPLES AND (PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR))
     add_subdirectory(examples)
 endif()
+
+add_subdirectory(extras)

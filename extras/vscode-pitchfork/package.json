@@ -1,0 +1,56 @@
+{
+    "name": "vscode-pitchfork",
+    "displayName": "Pitchfork",
+    "description": "Pitchfork Support for VSCode",
+    "version": "0.0.1",
+    "keywords": [
+        "cmake",
+        "c++",
+        "native"
+    ],
+    "publisher": "vector-of-bool",
+    "engines": {
+        "vscode": "^1.26.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onCommand:pf.newProject",
+        "onCommand:pf.changeBaseDir",
+        "workspaceContains:.pitchfork-init"
+    ],
+    "main": "./out/extension",
+    "contributes": {
+        "commands": [
+            {
+                "command": "pf.changeBaseDir",
+                "title": "Set the Project Base Directory",
+                "category": "Pitchfork"
+            },
+            {
+                "command": "pf.newProject",
+                "title": "Create a New Project",
+                "category": "Pitchfork"
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "yarn compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "test": "yarn compile && node ./node_modules/vscode/bin/test"
+    },
+    "devDependencies": {
+        "@types/mocha": "^2.2.42",
+        "@types/node": "^8.10.25",
+        "tslint": "^5.8.0",
+        "typescript": "^2.6.1",
+        "@types/es6-promisify": "^6.0.0",
+        "vscode": "^1.1.21"
+    },
+    "dependencies": {
+        "es6-promisify": "^6.0.0"
+    }
+}
