@@ -38,7 +38,6 @@ if(NOT PF_VIRTUALENV_MODULE)
         # We've found the mod after failing to find it. Clear the cached failure.
         unset(PF_VIRTUALENV_MODULE CACHE)
     endif()
-    message(STATUS  "Try mod is ${found}")
     set(PF_VIRTUALENV_MODULE "${found}" CACHE STRING "Python 2 module containing virtualenv")
 endif()
 
