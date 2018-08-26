@@ -39,6 +39,23 @@ inline std::fstream open(const fs::path& filepath, std::ios::openmode mode) {
     return std::move(ret);
 }
 
+/**
+ * Write the contents of a file, creating parents directories if necessary.
+ */
+template <typename What>
+void write_file(const fs::path& path, What&& w, std::error_code& ec) {
+    fs::create_directories(path.parent_path(), ec);
+    if (ec) {
+        return;
+    }
+    auto strm = open(path, std::ios::out | std::ios::binary, ec);
+    if (ec) {
+        return;
+    }
+    strm << std::forward<What>(w);
+    ec = {};
+}
+
 }  // namespace pf
 
 #endif  // PF_FS_HPP_INCLUDED
