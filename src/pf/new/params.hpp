@@ -9,6 +9,8 @@ struct new_project_params {
     std::string name;
     fs::path    directory;
     std::string root_namespace;
+    bool        separate_headers = false;
+    std::string first_file_stem;
 };
 
 }  // namespace pf

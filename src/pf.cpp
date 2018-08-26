@@ -102,6 +102,20 @@ private:
     args::HelpFlag _help{_cmd, "help", "Print help for the `new` subcommand", {'h', "help"}};
     string_flag    _name{_cmd, "name", "Name for the new project", {"name"}};
     string_flag _namespace{_cmd, "namespace", "The root namespace for the project", {"namespace"}};
+    args::Group _split_headers_grp{_cmd, "Split headers?", args::Group::Validators::AtMostOne};
+    args::Flag  _split_headers{_split_headers_grp,
+                              "split-headers",
+                              "Split headers in `include/` and sources in `src/",
+                              {"split-headers"}};
+    args::Flag  _no_split_headers{_split_headers_grp,
+                                 "no-split-headers",
+                                 "Keep headers and sources in the `src/` directory",
+                                 {"no-split-headers"}};
+    string_flag
+        _first_file_stem{_cmd,
+                         "first-file",
+                         "Stem of the first file to create in the root namespace (No extension)",
+                         {"first-file"}};
 
     std::string get_name() {
         std::string name = _name.Get();
@@ -123,6 +137,42 @@ private:
             }
         }
         return ns;
+    }
+
+    bool get_should_split_headers() {
+        if (_split_headers) {
+            return true;
+        }
+        if (_no_split_headers) {
+            return false;
+        }
+        while (1) {
+            std::cout << "Separate headers and sources? [yN]: ";
+            auto chosen = get_input_line();
+            if (chosen.empty()) {
+                return false;
+            }
+            auto c = chosen[0];
+            if (c == 'y' || c == 'Y') {
+                return true;
+            } else if (c == 'n' || c == 'N') {
+                return false;
+            }
+        }
+    }
+
+    std::string get_first_file_stem(const fs::path& dir) {
+        auto ret = _first_file_stem.Get();
+        if (!ret.empty()) {
+            return ret;
+        }
+        auto default_fname = dir.stem().string();
+        std::cout << fmt::format("First file stem (No extension): [{}]", default_fname);
+        ret = get_input_line();
+        if (ret.empty()) {
+            return default_fname;
+        }
+        return ret;
     }
 
 public:
@@ -152,12 +202,13 @@ public:
         }
         params.directory = new_pr_dir;
 
-        // Get the new root namespace for the project.
-        auto default_ns       = pf::namespace_for_name(params.name);
-        params.root_namespace = get_namespace(default_ns);
+        // Fill out the parameters for the new project
+        params.root_namespace   = get_namespace(pf::namespace_for_name(params.name));
+        params.separate_headers = get_should_split_headers();
+        params.first_file_stem  = get_first_file_stem(params.directory);
 
         // Create the project!
-        pf::create_directories(params, ec);
+        pf::create_project(params, ec);
         if (ec) {
             _cli.console->error("Failed to prepare directories for new project ({}): {}",
                                 new_pr_dir,

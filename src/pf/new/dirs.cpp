@@ -22,9 +22,14 @@ pf::fs::path pf::create_directories(const pf::new_project_params& params, std::e
             return params.directory;                                                               \
         }                                                                                          \
     } while (0)
+    // Create the root directory
     MK_SUBDIR(".");
-    MK_SUBDIR("src/");
+    // Create the src/ directory
     auto ns_subdir = path_for_namespace(params.root_namespace);
     MK_SUBDIR("src" / ns_subdir);
+    // Create the include/ directory, if requested
+    if (params.separate_headers) {
+        MK_SUBDIR("include" / ns_subdir);
+    }
     return fs::canonical(params.directory);
 }
