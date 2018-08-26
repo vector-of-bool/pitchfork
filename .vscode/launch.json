@@ -1,0 +1,59 @@
+// A launch configuration that compiles the extension and then opens it inside a new window
+// Use IntelliSense to learn about possible attributes.
+// Hover to view descriptions of existing attributes.
+// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Pitchfork New Project",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": [
+                "--base-dir",
+                "${workspaceFolder}/build/pf-dbg-root",
+                "new"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "VSCode Extension",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}/extras/vscode-pitchfork"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/extras/vscode-pitchfork/out/**/*.js"
+            ],
+            "preLaunchTask": "npm: watch"
+        },
+        {
+            "name": "VSCode Extension Tests",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}/extras/vscode-pitchfork",
+                "--extensionTestsPath=${workspaceFolder}/extras/vscode-pitchfork/out/test"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/extras/vscode-pitchfork/out/test/**/*.js"
+            ],
+            "preLaunchTask": "npm: watch"
+        }
+    ]
+}

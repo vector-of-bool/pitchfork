@@ -8,21 +8,32 @@ project(pitchfork
     DESCRIPTION "Libraries and programs for working with Pitchfork Layout projects"
     )
 
+if(NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
+endif()
+
 # Ensure Conan deps are up-to-date
 find_package(Conan)
 if(Conan_FOUND)
     conan_install(-b catch2)
 endif()
 
-# Include third-party components we need for the build
+# Import the deps that were setup by Conan
+find_package(spdlog 1.1.0 REQUIRED)
+find_package(Boost 1.68.0 REQUIRED)
+
+# Include embedded third-party components we need for the build
 add_subdirectory(third_party)
 
 find_package(Filesystem REQUIRED)
 find_package(Bikeshed)
 find_package(Yarn)
 
-if(NOT Bikeshed_FOUND)
-    message(STATUS "No Bikeshed executable, so we will not generate the spec document")
+if(NOT MSVC)
+    add_compile_options(-Wall -Wextra)
+    if(PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+        add_compile_options(-Werror)
+    endif()
 endif()
 
 add_subdirectory(src)
