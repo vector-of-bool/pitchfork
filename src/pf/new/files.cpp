@@ -1,6 +1,7 @@
 #include "./files.hpp"
 
 #include <pf/new/dirs.hpp>
+#include <pf/new/project.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <spdlog/fmt/ostr.h>
