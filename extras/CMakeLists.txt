@@ -4,7 +4,10 @@ if(NOT YARN_EXECUTABLE)
 elseif(BUILD_VSCE)
     get_filename_component(stamp "${CMAKE_CURRENT_BINARY_DIR}/vsce.stamp" ABSOLUTE)
     get_filename_component(vsce_root vscode-pitchfork ABSOLUTE)
-    file(GLOB_RECURSE vsce_sources LIST_DIRECTORIES false CONFIGURE_DEPENDS ${vsce_root}/**)
+    file(GLOB_RECURSE vsce_sources LIST_DIRECTORIES false CONFIGURE_DEPENDS
+        ${vsce_root}/src/**
+        ${vsce_root}/package.json
+        )
     add_custom_command(
         OUTPUT "${stamp}"
         SOURCES ${vsce_sources}
