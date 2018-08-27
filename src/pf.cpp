@@ -9,6 +9,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <unordered_map>
 
 namespace fs = pf::fs;
 
@@ -95,6 +96,110 @@ public:
     }
 };
 
+class toggle_flag : public args::Flag {
+public:
+    enum state {
+        unset,
+        enabled,
+        disabled,
+    };
+    state _state = unset;
+
+private:
+    std::string GetNameString(const args::HelpParams&) const override { return "--[no-]" + Name(); }
+
+    args::FlagBase* Match(const args::EitherFlag& flag) override {
+        auto ret = Flag::Match(flag);
+        if (ret) {
+            auto off = flag.longFlag.find("no-");
+            _state   = (off == 0) ? disabled : enabled;
+        }
+        return ret;
+    }
+
+public:
+    toggle_flag(args::Group& grp, const std::string& name, const std::string& help)
+        : Flag::Flag(grp, name, help, {"no-" + name, name}) {}
+
+    enum state state() const noexcept { return _state; }
+};
+
+template <typename FlagType>
+FlagType get_string_value(args::ValueFlag<FlagType>& flag, const std::string& message) {
+    auto ret = flag.Get();
+    while (ret.empty()) {
+        std::cout << message << ": ";
+        ret = FlagType(get_input_line());
+    }
+    return ret;
+}
+
+template <typename FlagType>
+FlagType get_string_value(args::ValueFlag<FlagType>& flag,
+                          const std::string&         message,
+                          const FlagType&            default_) {
+    auto ret = flag.Get();
+    if (!ret.empty()) {
+        return ret;
+    }
+
+    std::cout << message << " [" << default_ << "]: ";
+    ret = FlagType(get_input_line());
+    if (ret.empty()) {
+        return default_;
+    }
+    return ret;
+}
+
+bool get_toggle_value(const toggle_flag& flag, const std::string& message, bool default_) {
+    if (flag.state() == flag.enabled) {
+        return true;
+    } else if (flag.state() == flag.disabled) {
+        return false;
+    }
+
+    while (1) {
+        std::cout << message;
+        std::cout << (default_ ? " [Yn]: " : " [yN]: ");
+        auto chosen = get_input_line();
+        if (chosen.empty()) {
+            return default_;
+        }
+        auto c = chosen[0];
+        if (c == 'y' || c == 'Y') {
+            return true;
+        } else if (c == 'n' || c == 'N') {
+            return false;
+        }
+    }
+}
+
+template <typename Map>
+typename Map::value_type::second_type
+get_map_value(const std::string& message, const Map& map, const std::string& default_ = "") {
+    while (1) {
+        std::cout << message << '\n';
+        std::cout << "Chose one of:\n";
+        for (auto& pair : map) {
+            std::cout << "  - " << pair.first << '\n';
+        }
+        if (default_.empty()) {
+            std::cout << "Selection: ";
+        } else {
+            std::cout << fmt::format("Selection [{}]: ", default_);
+        }
+        std::cout.flush();
+        auto chosen = get_input_line();
+        if (chosen.empty() && !default_.empty()) {
+            chosen = default_;
+        }
+        auto found = map.find(chosen);
+        if (found != map.end()) {
+            return found->second;
+        }
+    }
+}
+
 class cmd_new {
 private:
     cli_common&    _cli;
@@ -102,78 +207,25 @@ private:
     args::HelpFlag _help{_cmd, "help", "Print help for the `new` subcommand", {'h', "help"}};
     string_flag    _name{_cmd, "name", "Name for the new project", {"name"}};
     string_flag _namespace{_cmd, "namespace", "The root namespace for the project", {"namespace"}};
-    args::Group _split_headers_grp{_cmd, "Split headers?", args::Group::Validators::AtMostOne};
-    args::Flag  _split_headers{_split_headers_grp,
-                              "split-headers",
-                              "Split headers in `include/` and sources in `src/",
-                              {"split-headers"}};
-    args::Flag  _no_split_headers{_split_headers_grp,
-                                 "no-split-headers",
-                                 "Keep headers and sources in the `src/` directory",
-                                 {"no-split-headers"}};
+    toggle_flag _split_headers{_cmd, "split-headers", "Store headers separate from source files"};
+    toggle_flag _gen_third_party{_cmd, "third-party", "Generate a third_party/ directory"};
+    toggle_flag _gen_examples{_cmd, "examples", "Generate an examples/ directory"};
+    toggle_flag _gen_extras{_cmd, "extras", "Generate an extras/ directory"};
     string_flag
         _first_file_stem{_cmd,
                          "first-file",
                          "Stem of the first file to create in the root namespace (No extension)",
                          {"first-file"}};
 
-    std::string get_name() {
-        std::string name = _name.Get();
-        while (name.empty()) {
-            std::cout << "New project name: ";
-            name = get_input_line();
-        }
-        return name;
-    }
-
-    std::string get_namespace(const std::string& def_ns) {
-        std::string ns = _namespace.Get();
-        if (ns.empty()) {
-            std::cout << fmt::format("New project root namespace [{}]: ", def_ns);
-            ns = get_input_line();
-            if (ns.empty()) {
-                // They've opted to select the default project-name-as-namespace
-                return def_ns;
-            }
-        }
-        return ns;
-    }
-
-    bool get_should_split_headers() {
-        if (_split_headers) {
-            return true;
-        }
-        if (_no_split_headers) {
-            return false;
-        }
-        while (1) {
-            std::cout << "Separate headers and sources? [yN]: ";
-            auto chosen = get_input_line();
-            if (chosen.empty()) {
-                return false;
-            }
-            auto c = chosen[0];
-            if (c == 'y' || c == 'Y') {
-                return true;
-            } else if (c == 'n' || c == 'N') {
-                return false;
-            }
-        }
-    }
-
-    std::string get_first_file_stem(const fs::path& dir) {
-        auto ret = _first_file_stem.Get();
-        if (!ret.empty()) {
-            return ret;
-        }
-        auto default_fname = dir.stem().string();
-        std::cout << fmt::format("First file stem (No extension): [{}]", default_fname);
-        ret = get_input_line();
-        if (ret.empty()) {
-            return default_fname;
-        }
-        return ret;
-    }
+    std::unordered_map<std::string, pf::build_system> _bs_map{
+        {"none", pf::build_system::none},
+        {"cmake", pf::build_system::cmake},
+    };
+    args::MapFlag<std::string, pf::build_system> _build_system{_cmd,
+                                                               "build-system",
+                                                               "The build system to generate",
+                                                               {'b', "build-system"},
+                                                               _bs_map};
 
 public:
     explicit cmd_new(cli_common& gl)
@@ -185,7 +237,7 @@ public:
         pf::new_project_params params;
 
         // Get the project name
-        params.name = get_name();
+        params.name = get_string_value(_name, "Name for the new project");
 
         // Check on the directory which we will create
         auto            new_pr_dir = fs::absolute(_cli.get_base_dir() / params.name);
@@ -203,9 +255,29 @@ public:
         params.directory = new_pr_dir;
 
         // Fill out the parameters for the new project
-        params.root_namespace   = get_namespace(pf::namespace_for_name(params.name));
-        params.separate_headers = get_should_split_headers();
-        params.first_file_stem  = get_first_file_stem(params.directory);
+        params.root_namespace = get_string_value(_namespace,
+                                                 "Initial namespace",
+                                                 pf::namespace_for_name(params.name));
+        // Process toggles
+        params.separate_headers
+            = get_toggle_value(_split_headers, "Split headers and sources?", false);
+        params.create_third_party
+            = get_toggle_value(_gen_third_party, "Generate a third_party/ directory?", true);
+        params.create_examples
+            = get_toggle_value(_gen_examples, "Generate an examples/ directory?", true);
+        params.create_extras
+            = get_toggle_value(_gen_extras, "Generate an extras/ directory?", false);
+
+        // Final stuff
+        params.first_file_stem = get_string_value(_first_file_stem,
+                                                  "First file stem (No extension)",
+                                                  params.directory.stem().string());
+
+        auto bs = _build_system.Get();
+        if (bs == pf::build_system::unspecified) {
+            bs = get_map_value("Build system to generate", _bs_map, "cmake");
+        }
+        params.build_system = bs;
 
         // Create the project!
         pf::create_project(params, ec);
@@ -215,7 +287,7 @@ public:
                                 ec.message());
             return 1;
         }
-        return 1;
+        return 0;
     }
 };
 

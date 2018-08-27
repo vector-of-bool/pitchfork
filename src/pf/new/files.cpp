@@ -4,32 +4,46 @@
 #include <pf/new/project.hpp>
 
 #include <boost/algorithm/string.hpp>
-#include <spdlog/fmt/ostr.h>
+#include <kainjow/mustache.hpp>
 
 #include <fstream>
 
-auto SRC_TEMPLATE = R"SRC(#include <{0}/{1}.hpp>
+namespace {
+auto SRC_TEMPLATE = R"SRC(#include <{{src_dir}}/{{first_stem}}.hpp>
 
-int {2}::calculate_value() {{
+int {{root_ns}}::calculate_value() {
     // How many roads must a man walk down?
     return 6 * 7;
-}}
+}
 )SRC";
 
-auto HEADER_TEMPLATE = R"HEADER(#ifndef {1}
-#define {1}
+auto HEADER_TEMPLATE = R"HEADER(#ifndef {{guard_def}}
+#define {{guard_def}}
 
-namespace {0} {{
+namespace {{root_ns}} {
 
 /**
  * Calculate the answer. Not sure what the question is, though...
  */
 int calculate_value();
 
-}}
+}
 
-#endif // {1}
+#endif // {{guard_def}}
 )HEADER";
+
+auto EXAMPLE1_CPP = R"(#include <iostream>
+
+#include <{{src_dir}}/{{first_stem}}.hpp>
+
+int main() {
+    std::cout << "I am an example executable\n";
+    std::cout << "Let's calculate the value...\n";
+    const auto value = {{root_ns}}::calculate_value();
+    std::cout << "The value we got is " << value << '\n';
+}
+)";
+}  // namespace
 
 void pf::create_files(const pf::new_project_params& params, std::error_code& ec) {
     // The first file path will be based on the namespace root namespace
@@ -39,26 +53,40 @@ void pf::create_files(const pf::new_project_params& params, std::error_code& ec)
     auto first_header = params.directory / (params.separate_headers ? "include" : "src") / ns_path
         / (params.first_file_stem + ".hpp");
 
-    // Write the source file
-    auto content = fmt::format(SRC_TEMPLATE,
-                               ns_path.string(),
-                               params.first_file_stem,
-                               params.root_namespace);
-    write_file(first_src, content, ec);
-    if (ec) {
-        return;
-    }
-
-    // Write the header file
     // Prepare the include guard string by replacing non-ident elements with '_'
     auto guard = (ns_path.string() + "_" + params.first_file_stem + "_HPP_INCLUDED");
     boost::replace_all(guard, "/", "_");
     boost::replace_all(guard, "-", "_");
     boost::replace_all(guard, ".", "_");
     boost::to_upper(guard);
-    content = fmt::format(HEADER_TEMPLATE, params.root_namespace, guard);
+
+    // Set up the template render context
+    kainjow::mustache::data ctx;
+    ctx.set("root_ns", params.root_namespace);
+    ctx.set("first_stem", params.first_file_stem);
+    ctx.set("src_dir", ns_path.string());
+    ctx.set("guard_def", guard);
+
+    // Write the source file
+    auto content = kainjow::mustache::mustache{SRC_TEMPLATE}.render(ctx);
+    write_file(first_src, content, ec);
+    if (ec) {
+        return;
+    }
+
+    // Write the header file
+    content = kainjow::mustache::mustache{HEADER_TEMPLATE}.render(ctx);
     write_file(first_header, content, ec);
     if (ec) {
         return;
+    }
+
+    // Optional files
+    if (params.create_examples) {
+        content = kainjow::mustache::mustache{EXAMPLE1_CPP}.render(ctx);
+        write_file(params.directory / "examples/example1.cpp", content, ec);
+        if (ec) {
+            return;
+        }
     }
 }

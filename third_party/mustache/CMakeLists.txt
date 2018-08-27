@@ -1,0 +1,5 @@
+if(NOT TARGET kainjow::mustache)
+    add_library(kainjow::mustache INTERFACE IMPORTED GLOBAL)
+    target_include_directories(kainjow::mustache INTERFACE "${CMAKE_CURRENT_LIST_DIR}/include")
+    target_compile_features(kainjow::mustache INTERFACE cxx_std_11)
+endif()

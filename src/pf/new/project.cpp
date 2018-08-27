@@ -1,10 +1,10 @@
 #include "./project.hpp"
 
+#include <pf/new/cmake.hpp>
 #include <pf/new/dirs.hpp>
 #include <pf/new/files.hpp>
 
 #include <boost/algorithm/string.hpp>
-
 
 pf::fs::path pf::path_for_namespace(const std::string& ns) {
     return boost::replace_all_copy(ns, "::", "/");
@@ -24,4 +24,13 @@ void pf::create_project(const pf::new_project_params& params, std::error_code& e
         return;
     }
     pf::create_files(params, ec);
+    if (ec) {
+        return;
+    }
+    if (params.build_system == pf::build_system::cmake) {
+        pf::create_cmake_files(params, ec);
+        if (ec) {
+            return;
+        }
+    }
 }
