@@ -38,8 +38,6 @@ function(_conan_install)
                 -e "CXX=${CMAKE_CXX_COMPILER}"
                 ${ARGN}
             WORKING_DIRECTORY "${bin}"
-            OUTPUT_VARIABLE out
-            ERROR_VARIABLE out
             RESULT_VARIABLE retc
             )
         if(retc)
