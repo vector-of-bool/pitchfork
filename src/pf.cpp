@@ -208,6 +208,7 @@ private:
     string_flag    _name{_cmd, "name", "Name for the new project", {"name"}};
     string_flag _namespace{_cmd, "namespace", "The root namespace for the project", {"namespace"}};
     toggle_flag _split_headers{_cmd, "split-headers", "Store headers separate from source files"};
+    toggle_flag _gen_tests{_cmd, "tests", "Generate a tests/ directory"};
     toggle_flag _gen_third_party{_cmd, "third-party", "Generate a third_party/ directory"};
     toggle_flag _gen_examples{_cmd, "examples", "Generate an examples/ directory"};
     toggle_flag _gen_extras{_cmd, "extras", "Generate an extras/ directory"};
@@ -234,13 +235,12 @@ public:
     explicit operator bool() const { return !!_cmd; }
 
     int run() {
-        pf::new_project_params params;
 
         // Get the project name
-        params.name = get_string_value(_name, "Name for the new project");
+        auto pr_name = get_string_value(_name, "Name for the new project");
 
         // Check on the directory which we will create
-        auto            new_pr_dir = fs::absolute(_cli.get_base_dir() / params.name);
+        auto            new_pr_dir = fs::absolute(_cli.get_base_dir() / pr_name);
         std::error_code ec;
         if (fs::exists(new_pr_dir, ec)) {
             _cli.console->error(
@@ -252,26 +252,29 @@ public:
             _cli.console->error("Failed to check on directory ({}): {}", new_pr_dir, ec.message());
             return 2;
         }
-        params.directory = new_pr_dir;
 
         // Fill out the parameters for the new project
-        params.root_namespace = get_string_value(_namespace,
-                                                 "Initial namespace",
-                                                 pf::namespace_for_name(params.name));
+        auto root_namespace
+            = get_string_value(_namespace, "Initial namespace", pf::namespace_for_name(pr_name));
+
+        // Final stuff
+        auto first_file_stem = get_string_value(_first_file_stem,
+                                                "First file stem (No extension)",
+                                                new_pr_dir.stem().string());
+
+        // We have enough for the initial params set
+        pf::new_project_params params{pr_name, root_namespace, first_file_stem, new_pr_dir};
+
         // Process toggles
         params.separate_headers
             = get_toggle_value(_split_headers, "Split headers and sources?", false);
+        params.create_tests = get_toggle_value(_gen_tests, "Generate a tests/ directory?", true);
         params.create_third_party
             = get_toggle_value(_gen_third_party, "Generate a third_party/ directory?", true);
         params.create_examples
             = get_toggle_value(_gen_examples, "Generate an examples/ directory?", true);
         params.create_extras
             = get_toggle_value(_gen_extras, "Generate an extras/ directory?", false);
-
-        // Final stuff
-        params.first_file_stem = get_string_value(_first_file_stem,
-                                                  "First file stem (No extension)",
-                                                  params.directory.stem().string());
 
         auto bs = _build_system.Get();
         if (bs == pf::build_system::unspecified) {

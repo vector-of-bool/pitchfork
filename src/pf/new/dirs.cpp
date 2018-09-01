@@ -29,6 +29,9 @@ void pf::create_directories(const pf::new_project_params& params, std::error_cod
     if (params.create_extras) {
         MK_SUBDIR("extras");
     }
+    if (params.create_tests) {
+        MK_SUBDIR("tests");
+    }
     // Build system
     if (params.build_system == pf::build_system::cmake) {
         MK_SUBDIR("cmake");

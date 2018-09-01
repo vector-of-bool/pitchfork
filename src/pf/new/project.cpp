@@ -6,6 +6,8 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <cassert>
+
 pf::fs::path pf::path_for_namespace(const std::string& ns) {
     return boost::replace_all_copy(ns, "::", "/");
 }
@@ -19,6 +21,8 @@ std::string pf::namespace_for_name(const std::string& name) {
 }
 
 void pf::create_project(const pf::new_project_params& params, std::error_code& ec) {
+    assert(!params.name.empty() && "No name for project");
+    assert(!params.root_namespace.empty() && "No namespace for project!");
     pf::create_directories(params, ec);
     if (ec) {
         return;
