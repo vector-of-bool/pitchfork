@@ -1,7 +1,7 @@
 find_package(Catch2 2.3.0 REQUIRED)
 include(Catch)
 
-add_library(pf-test-lib STATIC main.cpp compare_fs.hpp compare_fs.cpp)
+add_library(pf-test-lib STATIC test-main.cpp compare_fs.hpp compare_fs.cpp)
 target_link_libraries(pf-test-lib PUBLIC Catch2::Catch2 pf::pitchfork)
 target_compile_definitions(pf-test-lib
     PUBLIC
