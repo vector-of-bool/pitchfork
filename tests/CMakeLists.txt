@@ -12,7 +12,7 @@ target_compile_definitions(pf-test-lib
 function(pf_add_test_exe name)
     add_executable(${ARGV})
     target_link_libraries(${name} PRIVATE pf-test-lib)
-    catch_discover_tests(${name})
+    catch_discover_tests(${name} TEST_PREFIX ${name}::)
 endfunction()
 
-pf_add_test_exe(first my_test.cpp)
+pf_add_test_exe(generate generate.cpp)
