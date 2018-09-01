@@ -3,47 +3,14 @@
 #include <pf/new/dirs.hpp>
 #include <pf/new/project.hpp>
 
+#include <cmrc/cmrc.hpp>
+
 #include <boost/algorithm/string.hpp>
 #include <kainjow/mustache.hpp>
 
 #include <fstream>
 
-namespace {
-auto SRC_TEMPLATE = R"SRC(#include <{{src_dir}}/{{first_stem}}.hpp>
-
-int {{root_ns}}::calculate_value() {
-    // How many roads must a man walk down?
-    return 6 * 7;
-}
-)SRC";
-
-auto HEADER_TEMPLATE = R"HEADER(#ifndef {{guard_def}}
-#define {{guard_def}}
-
-namespace {{root_ns}} {
-
-/**
- * Calculate the answer. Not sure what the question is, though...
- */
-int calculate_value();
-
-}
-
-#endif // {{guard_def}}
-)HEADER";
-
-auto EXAMPLE1_CPP = R"(#include <iostream>
-
-#include <{{src_dir}}/{{first_stem}}.hpp>
-
-int main() {
-    std::cout << "I am an example executable\n";
-    std::cout << "Let's calculate the value...\n";
-    const auto value = {{root_ns}}::calculate_value();
-    std::cout << "The value we got is " << value << '\n';
-}
-)";
-}  // namespace
+CMRC_DECLARE(pf_templates);
 
 void pf::create_files(const pf::new_project_params& params, std::error_code& ec) {
     // The first file path will be based on the namespace root namespace
@@ -64,27 +31,45 @@ void pf::create_files(const pf::new_project_params& params, std::error_code& ec)
     kainjow::mustache::data ctx;
     ctx.set("root_ns", params.root_namespace);
     ctx.set("first_stem", params.first_file_stem);
-    ctx.set("src_dir", ns_path.string());
+    ctx.set("ns_path", ns_path.string());
     ctx.set("guard_def", guard);
 
+    auto templates_fs = cmrc::pf_templates::get_filesystem();
+
+    auto render = [&](std::string path) {
+        auto resource = templates_fs.open(path);
+        auto mustache = kainjow::mustache::mustache{std::string{resource.begin(), resource.end()}};
+        if (!mustache.is_valid()) {
+            throw std::runtime_error("Error rendering template file: " + path + ": "
+                                     + mustache.error_message());
+        }
+        return mustache.render(ctx);
+    };
+
     // Write the source file
-    auto content = kainjow::mustache::mustache{SRC_TEMPLATE}.render(ctx);
-    write_file(first_src, content, ec);
+    write_file(first_src, render("base/first_source.in.cpp"), ec);
     if (ec) {
         return;
     }
 
     // Write the header file
-    content = kainjow::mustache::mustache{HEADER_TEMPLATE}.render(ctx);
-    write_file(first_header, content, ec);
+    write_file(first_header, render("base/first_header.in.hpp"), ec);
     if (ec) {
         return;
     }
 
     // Optional files
     if (params.create_examples) {
-        content = kainjow::mustache::mustache{EXAMPLE1_CPP}.render(ctx);
-        write_file(params.directory / "examples/example1.cpp", content, ec);
+        write_file(params.directory / "examples/example1.cpp",
+                   render("base/first_example.in.cpp"),
+                   ec);
+        if (ec) {
+            return;
+        }
+    }
+
+    if (params.create_tests) {
+        write_file(params.directory / "tests/my_test.cpp", render("base/first_test.in.cpp"), ec);
         if (ec) {
             return;
         }
