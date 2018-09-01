@@ -29,6 +29,7 @@ target_link_libraries(libpitchfork
         spdlog::spdlog
     PRIVATE
         kainjow::mustache
+        pf::templates
     )
 
 add_executable(pf pf.cpp)

@@ -17,3 +17,5 @@ else()
         USES_TERMINAL
         )
 endif()
+
+add_subdirectory(templates)

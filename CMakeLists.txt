@@ -28,6 +28,7 @@ add_subdirectory(third_party)
 find_package(Filesystem REQUIRED)
 find_package(Bikeshed)
 find_package(Yarn)
+include(CMakeRC)
 
 if(NOT MSVC)
     add_compile_options(-Wall -Wextra)
@@ -36,8 +37,8 @@ if(NOT MSVC)
     endif()
 endif()
 
-add_subdirectory(src)
 add_subdirectory(data)
+add_subdirectory(src)
 
 option(BUILD_TESTS "Build tests" ON)
 if(BUILD_TESTS AND (PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR))
