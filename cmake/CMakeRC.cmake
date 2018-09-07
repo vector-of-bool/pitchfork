@@ -1,3 +1,5 @@
+# This block is executed when generating an intermediate resource file, not when
+# running in CMake configure mode
 if(_CMRC_GENERATE_MODE)
     # Read in the digits
     file(READ "${INPUT_FILE}" bytes HEX)
@@ -26,19 +28,36 @@ if(_CMRC_GENERATE_MODE)
         }}}
     ]] code)
     file(WRITE "${OUTPUT_FILE}" "${code}")
+    # Exit from the script. Nothing else needs to be processed
     return()
 endif()
 
+set(_version 2.0.0)
+
+cmake_minimum_required(VERSION 3.3)
+include(CMakeParseArguments)
+
 if(COMMAND cmrc_add_resource_library)
+    if(NOT DEFINED _CMRC_VERSION OR NOT (_version STREQUAL _CMRC_VERSION))
+        message(WARNING "More than one CMakeRC version has been included in this project.")
+    endif()
     # CMakeRC has already been included! Don't do anything
     return()
 endif()
 
-set(this_script "${CMAKE_CURRENT_LIST_FILE}")
+set(_CMRC_VERSION "${_version}" CACHE INTERNAL "CMakeRC version. Used for checking for conflicts")
 
-# CMakeRC uses std::call_once().
-set(THREADS_PREFER_PTHREAD_FLAG TRUE)
-find_package(Threads REQUIRED)
+set(_CMRC_SCRIPT "${CMAKE_CURRENT_LIST_FILE}" CACHE INTERNAL "Path to CMakeRC script")
+
+function(_cmrc_normalize_path var)
+    set(path "${${var}}")
+    file(TO_CMAKE_PATH "${path}" path)
+    while(path MATCHES "//")
+        string(REPLACE "//" "/" path "${path}")
+    endwhile()
+    string(REGEX REPLACE "/+$" "" path "${path}")
+    set("${var}" "${path}" PARENT_SCOPE)
+endfunction()
 
 get_filename_component(_inc_dir "${CMAKE_BINARY_DIR}/_cmrc/include" ABSOLUTE)
 set(CMRC_INCLUDE_DIR "${_inc_dir}" CACHE INTERNAL "Directory for CMakeRC include files")
@@ -299,7 +318,12 @@ class embedded_filesystem {
     const cmrc::detail::directory* _root;
     const detail::file_or_directory* _get(std::string path) const {
         path = detail::normalize_path(path);
-        return _root->get(path);
+        auto found = _index->find(path);
+        if (found == _index->end()) {
+            return nullptr;
+        } else {
+            return found->second;
+        }
     }
 
 public:
@@ -360,14 +384,14 @@ file(GENERATE OUTPUT "${cmrc_hpp}" CONTENT "${hpp_content}" CONDITION ${_generat
 
 add_library(cmrc-base INTERFACE)
 target_include_directories(cmrc-base INTERFACE "${CMRC_INCLUDE_DIR}")
+# Signal a basic C++11 feature to require C++11.
 target_compile_features(cmrc-base INTERFACE cxx_nullptr)
-target_link_libraries(cmrc-base INTERFACE Threads::Threads)
 set_property(TARGET cmrc-base PROPERTY INTERFACE_CXX_EXTENSIONS OFF)
 add_library(cmrc::base ALIAS cmrc-base)
 
 function(cmrc_add_resource_library name)
     set(args ALIAS NAMESPACE)
-    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "${args}" "")
+    cmake_parse_arguments(ARG "" "${args}" "" "${ARGN}")
     # Generate the identifier for the resource library's namespace
     if(NOT ARG_NAMESPACE)
         set(ARG_NAMESPACE "${name}")
@@ -399,7 +423,6 @@ function(cmrc_add_resource_library name)
                 class cmrc::detail::directory& directory;
             };
             dir_inl root_directory_dir{root_directory_};
-            (void)root_directory_dir;
             $<JOIN:$<TARGET_PROPERTY:@libname@,CMRC_MAKE_DIRS>,
             >
             $<JOIN:$<TARGET_PROPERTY:@libname@,CMRC_MAKE_FILES>,
@@ -417,7 +440,7 @@ function(cmrc_add_resource_library name)
         } // @libident@
         } // cmrc
     ]=] cpp_content @ONLY)
-    get_filename_component(libdir "${CMAKE_CURRENT_BINARY_DIR}/${name}" ABSOLUTE)
+    get_filename_component(libdir "${CMAKE_CURRENT_BINARY_DIR}/__cmrc_${name}" ABSOLUTE)
     get_filename_component(lib_tmp_cpp "${libdir}/lib_.cpp" ABSOLUTE)
     string(REPLACE "\n        " "\n" cpp_content "${cpp_content}")
     file(GENERATE OUTPUT "${lib_tmp_cpp}" CONTENT "${cpp_content}")
@@ -482,11 +505,12 @@ function(cmrc_add_resources name)
     set(options)
     set(args WHENCE PREFIX)
     set(list_args)
-    cmake_parse_arguments(PARSE_ARGV 1 ARG "${options}" "${args}" "${list_args}")
+    cmake_parse_arguments(ARG "${options}" "${args}" "${list_args}" "${ARGN}")
 
     if(NOT ARG_WHENCE)
         set(ARG_WHENCE ${CMAKE_CURRENT_SOURCE_DIR})
     endif()
+    _cmrc_normalize_path(ARG_WHENCE)
     get_filename_component(ARG_WHENCE "${ARG_WHENCE}" ABSOLUTE)
 
     # Generate the identifier for the resource library's namespace
@@ -502,6 +526,7 @@ function(cmrc_add_resources name)
     endif()
 
     foreach(input IN LISTS ARG_UNPARSED_ARGUMENTS)
+        _cmrc_normalize_path(input)
         get_filename_component(abs_in "${input}" ABSOLUTE)
         # Generate a filename based on the input filename that we can put in
         # the intermediate directory.
@@ -510,6 +535,9 @@ function(cmrc_add_resources name)
             # For now we just error on files that exist outside of the soure dir.
             message(SEND_ERROR "Cannot add file '${input}': File must be in a subdirectory of ${ARG_WHENCE}")
             continue()
+        endif()
+        if(DEFINED ARG_PREFIX)
+            _cmrc_normalize_path(ARG_PREFIX)
         endif()
         if(ARG_PREFIX AND NOT ARG_PREFIX MATCHES "/$")
             set(ARG_PREFIX "${ARG_PREFIX}/")
@@ -538,7 +566,7 @@ function(cmrc_add_resources name)
             TARGET ${name}
             APPEND PROPERTY CMRC_MAKE_FILES
             "root_index.emplace("
-            "    \"${relpath}\","
+            "    \"${ARG_PREFIX}${relpath}\","
             "    ${parent_sym}_dir.directory.add_file("
             "        \"${leaf}\","
             "        res_chars::${sym}_begin,"
@@ -554,7 +582,7 @@ function(_cmrc_generate_intermediate_cpp lib_ns symbol outfile infile)
         # This is the file we will generate
         OUTPUT "${outfile}"
         # These are the primary files that affect the output
-        DEPENDS "${infile}" "${this_script}"
+        DEPENDS "${infile}" "${_CMRC_SCRIPT}"
         COMMAND
             "${CMAKE_COMMAND}"
                 -D_CMRC_GENERATE_MODE=TRUE
@@ -562,7 +590,7 @@ function(_cmrc_generate_intermediate_cpp lib_ns symbol outfile infile)
                 -DSYMBOL=${symbol}
                 "-DINPUT_FILE=${infile}"
                 "-DOUTPUT_FILE=${outfile}"
-                -P "${this_script}"
+                -P "${_CMRC_SCRIPT}"
         COMMENT "Generating intermediate file for ${infile}"
     )
 endfunction()
