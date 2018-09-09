@@ -50,7 +50,220 @@ each-other. Subcomponents greatly increase the complexity potential, but aren't
 completely out of the question. A project layout standard *must* be able to
 handle subdivided projects.
 
-## Files ## {#intro.files}
+## Background and Terminology ## {#intro.bg}
+
+The ideas and concepts presented herein are not novel. Rather, they are built
+upon the work of others. Some come from professional idea and experience, while
+others come from community convention, which has gradually converged on to
+prefer certain patterns while decrying others.
+
+### Physical vs. Logical Layout ### {#intro.bg.phy_log}
+
+This document builds heavily upon the work of John Lakos, who has spear-headed
+much work on the aspects of *physical design*. Much work has been put into
+evangelizing in the area of *logical design*, but *physical design* to this day
+remains a topic that (in this author's opinion) is too often overlooked when
+designing and implementing systems, as well as the teaching thereof.
+
+John Lakos's 1996 book *Large-Scale C++ Software Design*, to this day, remains
+as *the* book on *physical design* in C++.
+
+So what's the difference between *physical* and *logical* design?
+
+**Logical design** pertains closely to programming-language-level aspects of the
+design of a system.
+
+**Physical design** pertains to the aspects of design *outside* of what is
+encoded by the language.
+
+The source unit dealt with by the C and C++ standards is the *translation
+unit*. This corresponds to a source file which has had all preprocessor
+directives resolved. This is the closest that the language standards get to
+discussing *physical design* of systems.
+
+Physical design, despite its name, still lives within the digital space, of
+course. It concerns the placement and naming of files and directories within a
+filesystem, as well as how to coordinate communication between physical units
+where the relationship between their filesystem locations is not deterministic.
+
+This document does not address much in the way of *logical design*. Rather, it
+is specifically written to address many common questions and resolve common
+answers for *physical design*.
+
+### The *Physical Component* ### {#intro.bg.component}
+
+The most fundamental unit of *physical design* is the **Component**.
+
+A *component* SHOULD correspond to exactly two files: A *header* and a *source*
+file. For some *rare* cases it may be beneficial to use more than a single
+source file in a single physical component, but it may be a sign that further
+refactoring is needed.
+
+Additionally, a component MAY have a test source file, but it is not considered
+a part of the physical component.
+
+### Logical/Physical Coherence ### {#intro.bg.coherence}
+
+This document assumes that developers will work to maintain logical/physical
+*coherence*. There MUST be a coherent relationship between the logical and
+physical components of a system, and a single logical component MUST NOT be
+spread across multiple physical components. Multiple logical components SHOULD
+NOT appear within the same physical component.
+
+Note: *Logical components* can include more than an individual class or
+function. For example, it may include classes representing private data (for
+the PIMPL pattern), or `friend` classes and functions. Blindly splitting every
+class and function into individual physical components is not required nor
+recommended.
+
+Physical components MUST NOT form cyclic dependencies.
+
+<div class="example">
+**Example of friendship**
+```c++
+// list.hpp
+namespace acme {
+
+template <typename T>
+class list;
+
+namespace detail {
+
+// Class implementing a "list iterator"
+template <typename T>
+class list_iterator {
+public:
+    // Public default constructor
+    list_iterator() = default;
+
+private:
+    // A private constructor used to initialize the iterator to the proper state
+    explicit list_iterator(list<T>&);
+
+    // Permit our list class to construct us with the private constructor
+    friend class list<T>;
+};
+
+}
+
+template <typename T>
+class list {
+public:
+    using iterator = detail::list_iterator<T>;
+
+    // The iterator class is a friend, giving it access to our internals
+    friend class detail::list_iterator<T>;
+};
+
+}
+```
+
+The `list.cpp` is empty other than a single include directive:
+
+```c++
+// list.cpp
+#include "list.hpp"
+```
+
+The purpose of the otherwise empty `list.cpp` is to ensure that the `list.hpp`
+file will compile in isolation, ensuring that the header has the necessary
+`#include` directives and/or forward declarations.
+
+Despite having two distinct language-level `class` templates, we have a single
+*logical component*. We say that these two class templates are "co-located."
+
+We also have two source files, a `list.hpp` and `list.cpp`, but they together
+form a single *physical component*.
+</div>
+
+<div class="example">
+**Example using PIMPL**
+```c++
+// connection.hpp
+#include <memory>
+
+namespace acme {
+
+// Forward-declare the private member data type
+namespace detail { class connection_ipml; }
+
+// The wrapper class
+class connection {
+private:
+    // The actual PIMPL
+    std::unique_ptr<detail::connection_impl> _impl;
+
+public:
+    connection(const std::string& address);
+    ~connection();
+};
+
+}
+```
+
+And a corresponding `connection.cpp`:
+
+```c++
+#include "connection.hpp"
+
+namespace acme::detail {
+
+class connection_impl {
+    // Whatever we need for the connection...
+};
+
+}
+
+namespace {
+
+std::unique_ptr<acme::detail::connection_impl>
+init_private_data(const std::string& address) {
+    // Initialize and return the connection data...
+}
+
+}
+
+acme::connection::~connection() = default;
+acme::connection::connection(const std::string& address)
+    : _impl{ init_private_data(address) }
+{}
+```
+
+Again we have two different (non-`template`) classes, and a single logical
+component. In the header, the implementation detail class is only *forward*
+declared, not fully defined. In the `connection.cpp` we provide the definition
+for the detail class.
+</div>
+
+### Packages, Projects, Modules, and Submodules ### {#into.bg.pkg}
+
+The terms defined in prior sections were heavily borrowed from John Lakos's
+work. His work also often uses the term *package* to refer to a collection of
+source components. This would roughly correspond to the entire source
+repository, including build files, support files, documentation, scripts, and
+data.
+
+Unfortunately, the term "package" has been heavily overloaded. These days,
+"package" most often refers to a unit of distribution of software, rather than
+the software itself. For this reason, this document prefers the term "project,"
+and will use it instead of "package," although they mean the same thing.
+
+In a similar vein, the term *module* has also been heavily overloaded. In the
+wake of upcoming C++ module specifications and implementations, the word
+"module" will be avoided as to avoid ambiguity and confusion as a "module"
+corresponds with neither a *package*/*project* nor a *physical component*.
+
+Still, a term is needed to refer to the subdivisions of a large project into
+smaller elements. For example, *Qt* is an enormous framework of many
+interconnected pieces. To refer to these pieces *Qt* uses the term "module",
+which has already been excluded.
+
+For lack of a better unqualified term, the best this author can find is a
+qualified term: *Submodule*. This term will be used to denote separate sections
+of a project which can be consumed on as-needed basis. See the
+[[#submod-layout]] for more information.
+
+## Project Files ## {#intro.files}
 
 PFL prescribes several files that SHOULD be present in the root of the project:
 
@@ -66,7 +279,7 @@ this directory.
 Other files in the root directory must be pertinent to the build system of the
 project. Other files SHOULD NOT appear in the root of the project.
 
-## Directories ## {#intro.dirs}
+## Project Directories ## {#intro.dirs}
 
 PFL prescribes several directories that SHOULD appear at the root of the project
 tree. Not all of the directories are required, but they have an assigned
@@ -240,7 +453,7 @@ components:
 
 Each extra project component should occupy exactly one subdirectory of `extras/`,
 and the placement of files and directories in `extras/` MUST adhere to the
-requirements outlined in [[#subcomp-layout]].
+requirements outlined in [[#submod-layout]].
 
 `extras/` SHOULD NOT contain files other than those required by tooling.
 
@@ -268,6 +481,42 @@ The contents of this directory SHOULD NOT be relevant to a project consumer.
 
 # Source Tree Layout # {#src-layout}
 
-# Subcomponent Layout # {#subcomp-layout}
+For the purposes of this section, the [[#tld.include|include/]] and
+[[#tld.src|src/]] top-level directories are both included in the definition of
+"source directories." They are root of the *source tree*. They are named as such
+because they contain the primary "source files" of the source language (C and/or
+C++).
+
+Header files and source files SHOULD correspond to a logical unit of the
+project. For example, a `geometry` library might contain a `circle` class along
+a single header and (optional) source file to represent it. If no other
+components appear in that header and/or source file, the component can be said
+to be the "main component" of that file. The main component may be a `class`,
+function, or some grouping thereof.
+
+The layout of the source tree SHOULD closely correspond to the namespace
+structure of the project.
+
+In C, there is no language-level concept of a namespace, but there is the
+convention of qualifying globally visible identifiers with a "pseudo" namespace.
+For example, a `libfoo` might define a `foo_create()`, where the prefix `foo_`
+acts as the "namespace" for the identifier. The namespace for these purposes can
+be said to be `foo`.
+
+In C++, which has a language-level `namespace`, the need to qualify identifiers
+in this way is not necessary (when using C++ linkage). Instead, these qualifiers
+are put in `namespace`s.
+
+This class might live in a `geo::shape` namespace, for example.
+
+Given this definition, we can also say that a header and/or source file has a
+"main namespace".
+
+Source files SHOULD be placed in a directory relative to the source tree root
+directory where the relative path is composed by joining the elements of the
+component namespace as intermediate directories. The stem of the source filename
+SHOULD correspond to the name of the component which it declares or defines.
+
+# Submodule Layout # {#submod-layout}
 
 # Open Questions # {#open-qs}
