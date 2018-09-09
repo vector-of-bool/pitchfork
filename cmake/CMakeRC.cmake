@@ -67,14 +67,15 @@ set(hpp_content [==[
 #ifndef CMRC_CMRC_HPP_INCLUDED
 #define CMRC_CMRC_HPP_INCLUDED
 
-#include <string>
-#include <map>
-#include <mutex>
-#include <deque>
-#include <type_traits>
 #include <cassert>
 #include <functional>
+#include <iterator>
+#include <list>
+#include <map>
+#include <mutex>
+#include <string>
 #include <system_error>
+#include <type_traits>
 
 namespace cmrc { namespace detail { struct dummy; } }
 
@@ -94,11 +95,16 @@ class file {
     const char* _end = nullptr;
 
 public:
-    const char* begin() const { return _begin; }
-    const char* end() const { return _end; }
+    using iterator = const char*;
+    using const_iterator = iterator;
+    iterator begin() const noexcept { return _begin; }
+    iterator cbegin() const noexcept { return _begin; }
+    iterator end() const noexcept { return _end; }
+    iterator cend() const noexcept { return _end; }
+    std::size_t size() const { return std::distance(begin(), end()); }
 
     file() = default;
-    file(const char* beg, const char* end) : _begin(beg), _end(end) {}
+    file(iterator beg, iterator end) noexcept : _begin(beg), _end(end) {}
 };
 
 class directory_entry;
@@ -162,8 +168,8 @@ struct created_subdirectory {
 };
 
 class directory {
-    std::deque<file_data> _files;
-    std::deque<directory> _dirs;
+    std::list<file_data> _files;
+    std::list<directory> _dirs;
     std::map<std::string, file_or_directory> _index;
 
     using base_iterator = std::map<std::string, file_or_directory>::const_iterator;
@@ -227,7 +233,7 @@ public:
             return iterator(_end_iter, _end_iter);
         }
 
-        inline directory_entry operator*() const noexcept;
+        inline value_type operator*() const noexcept;
 
         bool operator==(const iterator& rhs) const noexcept {
             return _base_iter == rhs._base_iter;
@@ -264,7 +270,7 @@ inline std::string normalize_path(std::string path) {
     while (path.find("/") == 0) {
         path.erase(path.begin());
     }
-    while (path.rfind("/") == path.size() - 1) {
+    while (!path.empty() && (path.rfind("/") == path.size() - 1)) {
         path.pop_back();
     }
     auto off = path.npos;
@@ -293,7 +299,7 @@ public:
         return _fname;
     }
     std::string filename() const && {
-        return _fname;
+        return std::move(_fname);
     }
 
     bool is_file() const {
@@ -315,7 +321,6 @@ using directory_iterator = detail::directory::iterator;
 class embedded_filesystem {
     // Never-null:
     const cmrc::detail::index_type* _index;
-    const cmrc::detail::directory* _root;
     const detail::file_or_directory* _get(std::string path) const {
         path = detail::normalize_path(path);
         auto found = _index->find(path);
@@ -327,9 +332,8 @@ class embedded_filesystem {
     }
 
 public:
-    embedded_filesystem(const detail::index_type& index, const cmrc::detail::directory& dir)
+    explicit embedded_filesystem(const detail::index_type& index)
         : _index(&index)
-        , _root(&dir)
     {}
 
     file open(const std::string& path) const {
@@ -393,10 +397,18 @@ function(cmrc_add_resource_library name)
     set(args ALIAS NAMESPACE)
     cmake_parse_arguments(ARG "" "${args}" "" "${ARGN}")
     # Generate the identifier for the resource library's namespace
-    if(NOT ARG_NAMESPACE)
+    set(ns_re "[a-zA-Z_][a-zA-Z0-9_]*")
+    if(NOT DEFINED ARG_NAMESPACE)
+        # Check that the library name is also a valid namespace
+        if(NOT name MATCHES "${ns_re}")
+            message(SEND_ERROR "Library name is not a valid namespace. Specify the NAMESPACE argument")
+        endif()
         set(ARG_NAMESPACE "${name}")
+    else()
+        if(NOT ARG_NAMESPACE MATCHES "${ns_re}")
+            message(SEND_ERROR "NAMESPACE for ${name} is not a valid C++ namespace identifier (${ARG_NAMESPACE})")
+        endif()
     endif()
-    string(MAKE_C_IDENTIFIER "${ARG_NAMESPACE}" libident)
     set(libname "${name}")
     # Generate a library with the compiled in character arrays.
     string(CONFIGURE [=[
@@ -405,7 +417,7 @@ function(cmrc_add_resource_library name)
         #include <utility>
 
         namespace cmrc {
-        namespace @libident@ {
+        namespace @ARG_NAMESPACE@ {
 
         namespace res_chars {
         // These are the files which are available in this resource library
@@ -415,29 +427,32 @@ function(cmrc_add_resource_library name)
 
         namespace {
 
-        std::pair<const cmrc::detail::index_type*, const cmrc::detail::directory*>
-        get_root_dir() {
+        const cmrc::detail::index_type&
+        get_root_index() {
             static cmrc::detail::directory root_directory_;
+            static cmrc::detail::file_or_directory root_directory_fod{root_directory_};
             static cmrc::detail::index_type root_index;
+            root_index.emplace("", &root_directory_fod);
             struct dir_inl {
                 class cmrc::detail::directory& directory;
             };
             dir_inl root_directory_dir{root_directory_};
+            (void)root_directory_dir;
             $<JOIN:$<TARGET_PROPERTY:@libname@,CMRC_MAKE_DIRS>,
             >
             $<JOIN:$<TARGET_PROPERTY:@libname@,CMRC_MAKE_FILES>,
             >
-            return std::make_pair(&root_index, &root_directory_);
+            return root_index;
         }
 
         }
 
         cmrc::embedded_filesystem get_filesystem() {
-            static auto pair = get_root_dir();
-            return cmrc::embedded_filesystem{*pair.first, *pair.second};
+            static auto& index = get_root_index();
+            return cmrc::embedded_filesystem{index};
         }
 
-        } // @libident@
+        } // @ARG_NAMESPACE@
         } // cmrc
     ]=] cpp_content @ONLY)
     get_filename_component(libdir "${CMAKE_CURRENT_BINARY_DIR}/__cmrc_${name}" ABSOLUTE)
@@ -515,7 +530,6 @@ function(cmrc_add_resources name)
 
     # Generate the identifier for the resource library's namespace
     get_target_property(lib_ns "${name}" CMRC_NAMESPACE)
-    string(MAKE_C_IDENTIFIER "${lib_ns}" lib_ns)
 
     get_target_property(libdir ${name} CMRC_LIBDIR)
     get_target_property(target_dir ${name} SOURCE_DIR)
