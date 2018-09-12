@@ -45,8 +45,8 @@ components:
     bindings)
 
 In addition, it is very common to see projects which subdivide themselves into
-subcomponents. These subcomponents may also have dependencies between
-each-other. Subcomponents greatly increase the complexity potential, but aren't
+submodules. These submodules may also have dependencies between
+each-other. Submodules greatly increase the complexity potential, but aren't
 completely out of the question. A project layout standard *must* be able to
 handle subdivided projects.
 
@@ -261,7 +261,7 @@ which has already been excluded.
 For lack of a better unqualified term, the best this author can find is a
 qualified term: *Submodule*. This term will be used to denote separate sections
 of a project which can be consumed on as-needed basis. See the
-[[#submod-layout]] for more information.
+[[#submod]] for more information.
 
 ## Project Files ## {#intro.files}
 
@@ -302,7 +302,7 @@ following sections.
 
 : [[#tld.src|src/]]
 :: Main compilable source location. MUST be present for projects with compiled
-    components and do not use subcomponents.
+    components that do not use submodules.
 
     In the presence of [[#tld.include|include/]], also contains private
     headers.
@@ -310,7 +310,7 @@ following sections.
 : [[#tld.include|include/]]
 :: Directory for public headers. MAY be present. MAY be omitted for projects
     that do not distinguish between private/public headers. MAY be omitted for
-    projects that use subcomponents.
+    projects that use submodules.
 
 : [[#tld.tests|tests/]]
 :: Directory for tests.
@@ -318,25 +318,28 @@ following sections.
 : [[#tld.examples|examples/]]
 :: Directory for samples and examples.
 
-: [[#tld.extern|extern/]]
-:: Directory for components to be used by the project, but not edited as part
-    of the project.
+: [[#tld.external|external/]]
+:: Directory for packages/projects to be used by the project, but not edited as
+    part of the project.
 
 : [[#tld.extras|extras/]]
-:: Directory containing extra/optional components for the project.
+:: Directory containing extra/optional submodules for the project.
 
 : [[#tld.data|data/]]
 :: Directory containing non-source code aspects of the project. This might
-    include graphics and markup files
+    include graphics and markup files.
 
 : [[#tld.tools|tools/]]
 :: Directory containing development utilities, such as build and refactoring
     scripts
 
+: [[#tld.libs|libs/]]
+:: Directory for main project submodules.
+
 # Top-Level Directories # {#tld}
 
 Pitchfork specifies several top-level directories. Other directories SHOULD NOT
-be  present in the root directory, except for what is required by other tooling.
+be present in the root directory, except for what is required by other tooling.
 
 ## `build/` ## {#tld.build}
 
@@ -407,21 +410,21 @@ prescribed by this document.
 Project maintainers MUST provide a way for consumers to disable the compilation
 fo examples and samples.
 
-## `extern/` ## {#tld.extern}
+## `external/` ## {#tld.external}
 
 The presence of this directory is not required.
 
-The `extern/` directory is reserved for embedding of external projects. Each
-embedded project should occupy a single subdirectory of `extern/`.
+The `external/` directory is reserved for embedding of external projects. Each
+embedded project should occupy a single subdirectory of `external/`.
 
-`extern/` SHOULD NOT contain files other than those required by tooling.
+`external/` SHOULD NOT contain files other than those required by tooling.
 
 This directory MAY be automatically populated, either partially or completely,
 by tools (eg. `git` submodules) as part of a build process. In this case,
 projects MUST declare the auto-populated subdirectories as ignored by relevant
 source control systems.
 
-Subdirectories of `extern/` SHOULD NOT be modified as part of regular project
+Subdirectories of `external/` SHOULD NOT be modified as part of regular project
 development. Subdirectories should remain as close to their upstream source as
 possible.
 
@@ -429,8 +432,8 @@ possible.
 
 The presence of this directory is not required.
 
-The `extras/` directory is designated for containing additional components for
-the project which build upon the main component(s). This may include components
+The `extras/` directory is designated for containing additional submodules for
+the project which build upon the main component(s). This may include submodules
 that are not part of the project's "default" build, or otherwise impose special
 requirements to be used.
 
@@ -443,19 +446,15 @@ components:
     with a particular platform. For example, a windowing library that needs to
     understand how to talk with Windows, Quartz, X11, and Wayland would include
     its platform integration implementations in this directory.
-3. "Contributed" components. Additional components that are contributed by the
+3. "Contributed" submodules. Additional submodules that are contributed by the
     project's users and included in upstream, but are not officially supported
     by the project.
-4. Optional components that require additional dependencies, or may be
+4. Optional submodules that require additional dependencies, or may be
     prohibitive to include for all users. For example, Qt's Webkit module is
     prohibitively time consuming to build, and it requires the presence of
     dependencies that are only required exactly for that one component.
 
-Each extra project component should occupy exactly one subdirectory of `extras/`,
-and the placement of files and directories in `extras/` MUST adhere to the
-requirements outlined in [[#submod-layout]].
-
-`extras/` SHOULD NOT contain files other than those required by tooling.
+`extras/` is a [[#submod.root|submodule root]].
 
 ## `data/` ## {#tld.data}
 
@@ -479,6 +478,14 @@ that may be useful to a project develop.
 
 The contents of this directory SHOULD NOT be relevant to a project consumer.
 
+## `libs/` ## {#tld.libs}
+
+The `libs/` directory MUST NOT be used unless the project wishes to subdivide
+itself into [[#submod|submodules]]. Its presence excludes the [[#tld.src|src/]]
+and [[#tld.include|include/]] directories.
+
+See [[#submod]] and [[#submod.libs]].
+
 # Source Tree Layout # {#src-layout}
 
 For the purposes of this section, the [[#tld.include|include/]] and
@@ -487,12 +494,13 @@ For the purposes of this section, the [[#tld.include|include/]] and
 because they contain the primary "source files" of the source language (C and/or
 C++).
 
-Header files and source files SHOULD correspond to a logical unit of the
+Header files and source files SHOULD correspond to a logical component of the
 project. For example, a `geometry` library might contain a `circle` class along
 a single header and (optional) source file to represent it. If no other
-components appear in that header and/or source file, the component can be said
-to be the "main component" of that file. The main component may be a `class`,
-function, or some grouping thereof.
+logical components appear in that header and/or source file, the logical
+component can be said to be the "main component" of the corresponding source
+component. The main logical component may be a `class`, function, or some
+grouping thereof.
 
 The layout of the source tree SHOULD closely correspond to the namespace
 structure of the project.
@@ -507,16 +515,117 @@ In C++, which has a language-level `namespace`, the need to qualify identifiers
 in this way is not necessary (when using C++ linkage). Instead, these qualifiers
 are put in `namespace`s.
 
-This class might live in a `geo::shape` namespace, for example.
-
-Given this definition, we can also say that a header and/or source file has a
-"main namespace".
+Given that each logical component has a namespace, we can associate that
+namespace with the physical component in which it is defined. This namespace
+can then be used to generate a qualified path by which the physical component
+can be found. In this way, physical components can be considered
+"content-addressable".
 
 Source files SHOULD be placed in a directory relative to the source tree root
 directory where the relative path is composed by joining the elements of the
 component namespace as intermediate directories. The stem of the source filename
-SHOULD correspond to the name of the component which it declares or defines.
+SHOULD correspond to the name of the logical component which it declares or
+defines.
 
-# Submodule Layout # {#submod-layout}
+<div class="example">
+Given a logical component `geo::shapes::circle`, we can use the qualifying
+namespace to generate the relative path `geo/shapes`, and the component's leaf
+name as a basis for the filename of `circle`. Thus, the full path to the sources
+defining the logical component are `geo/shapes/circle.hpp` and
+`geo/shapes/circle.cpp`.
+
+If sources and headers are split, the path from the project or submodules root
+to the header will be `include/geo/shapes/circle.hpp`, and the path to the
+compiled source file will be `src/geo/shapes/circle.cpp`. If merging headers
+and sources, then the header will appear as a sibling in
+`src/geo/shapes/circle.hpp`. The unit test for this file will appear at
+`src/geo/shapes/circle.test.cpp`.
+</div>
+
+In some cases, it may be advantageous to separate the compiled source file into
+multiple compiled source files while maintaining a single header file. In this
+case, the stem of the source file should begin the same as if it were not
+subdivided, then qualified with a `.` separating the distinguishing
+characteristic of the source file.
+
+<div class="example">
+Given a logical component `geo::shapes::circle`, and two *extremely complex*
+member functions `circumference()` and `area()`, we might split the
+implementations of these methods into separate translation units. The resulting
+physical component will have the following appearance:
+
+```
+<root>
+    src/geo/shapes/
+        circle.hpp
+        circle.cpp
+        circle.circumference.cpp
+        circle.area.cpp
+        circle.test.cpp
+```
+</div>
+
+# Submodules # {#submod}
+
+Very large projects (eg. Qt, Boost, JUCE, LLVM) will benefit from the concept of
+*submodules*.
+
+: Submodule
+:: A subdivision of a larger project which can be consumed as-needed. Contains
+    its own source trees, tests, data, and documentation.
+
+Note: Splitting a project into submodules should be considered *very carefully*.
+It is an extremely heavy tool with subtleties that often trip people up. Very
+few projects warrant subdividing themselves in this way.
+Most projects will do just fine with multiple namespaces and directories within
+their source tree. Don't reach for this tool when namespaces and subdirectories
+will suite you just fine. Converting a project to/from a submodule layout is
+a very cumbersome task.
+
+The following rules must be taken into consideration when considering or using
+submodules:
+
+- **Submodules are not themselves standalone projects**.
+- They should not pretend to be entire projects.
+- They cannot be consumed independent of the rest of the project.
+- They should not be versioned separately from the project.
+- They *cannot* further subdivide into sub-submodules.
+
+## Submodule Root ## {#submod.root}
+
+: Submodule Root
+:: A directory whose child directories are [[#submod.dir|submodules]].
+
+Submodule directories include:
+
+- [[#tld.extras]]
+- [[#submod.libs]]
+
+Each subdirectory of a submodule root must correspond to exactly one submodule.
+
+## Submodule Directory ## {#submod.dir}
+
+A submodule is represented as a subdirectory of the project which MAY contain
+the following directories:
+
+- [[#tld.src|src/]] for submodule sources
+- [[#tld.include|include/]] for submodule includes (if splitting headers)
+- [[#tld.tests|tests/]] for submodule tests
+- [[#tld.data|data/]] for submodule data
+- [[#tld.examples|examples/]] for examples
+<!-- - [[#tld.docs|docs/]] for submodule documentation -->
+
+Note: Most of the [[#tld|top-level directories]] are *absent* from this list.
+
+Submodules directories SHOULD NOT contain other files or directories except
+those required by tooling.
+
+## `libs/` ## {#submod.libs}
+
+The `libs/` directory is for *main* submodules. It is a
+[[#submod.root|submodule root]].
+
+When the `libs/` directory is present, the top-level `src/` and `include/`
+directories MUST NOT be present.
 
 # Open Questions # {#open-qs}
