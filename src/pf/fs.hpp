@@ -56,6 +56,14 @@ void write_file(const fs::path& path, What&& w, std::error_code& ec) {
     ec = {};
 }
 
+template <typename What>
+void write_file(const fs::path& path, What&& w) {
+    std::error_code ec;
+    write_file(path, std::forward<What>(w), ec);
+    if (ec) {
+        throw std::system_error{ec, "Failed to write file: " + path.string()};
+    }
+}
 }  // namespace pf
 
 #endif  // PF_FS_HPP_INCLUDED

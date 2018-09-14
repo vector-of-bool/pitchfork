@@ -2,38 +2,30 @@
 
 #include <pf/new/project.hpp>
 
-void pf::create_directories(const pf::new_project_params& params, std::error_code& ec) {
-#define MK_SUBDIR(subdir)                                                                          \
-    do {                                                                                           \
-        fs::create_directories(params.directory / subdir, ec);                                     \
-        if (ec) {                                                                                  \
-            return;                                                                                \
-        }                                                                                          \
-    } while (0)
+void pf::create_directories(const pf::new_project_params& params) {
     // Create the root directory
-    MK_SUBDIR(".");
+    fs::create_directories(params.directory);
     // Required subdirectories:
-    MK_SUBDIR("src");
-    MK_SUBDIR("tests");
-    MK_SUBDIR("docs");
+    fs::create_directories(params.directory / "src");
+    fs::create_directories(params.directory / "docs");
     // Conditional subdirs:
     if (params.separate_headers) {
-        MK_SUBDIR("include");
+        fs::create_directories(params.directory / "include");
     }
     if (params.create_third_party) {
-        MK_SUBDIR("third_party");
+        fs::create_directories(params.directory / "third_party");
     }
     if (params.create_examples) {
-        MK_SUBDIR("examples");
+        fs::create_directories(params.directory / "examples");
     }
     if (params.create_extras) {
-        MK_SUBDIR("extras");
+        fs::create_directories(params.directory / "extras");
     }
     if (params.create_tests) {
-        MK_SUBDIR("tests");
+        fs::create_directories(params.directory / "tests");
     }
     // Build system
     if (params.build_system == pf::build_system::cmake) {
-        MK_SUBDIR("cmake");
+        fs::create_directories(params.directory / "cmake");
     }
 }
