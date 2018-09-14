@@ -343,6 +343,8 @@ be present in the root directory, except for what is required by other tooling.
 
 ## `build/` ## {#tld.build}
 
+This directory is not required, but its name should be reserved.
+
 The `build/` directory is special in that it MUST NOT be committed to a source
 control system. A user downloading the codebase SHOULD NOT see a `build/`
 directory present in the project root, but one may be created in the course of
@@ -391,7 +393,7 @@ outlined in [[#src-layout]].
 
 ## `tests/` ## {#tld.tests}
 
-The presence of this directory is not required.
+This directory is not required.
 
 The `tests/` directory is reserved for source files related to project tests.
 The structure and layout of this directory is not prescribed by this document.
@@ -401,7 +403,7 @@ and running of tests, especially for the purpose of embedding.
 
 ## `examples/` ## {#tld.examples}
 
-The presence of this directory is not required.
+This directory is not required.
 
 The `examples/` directory is reserved for source files related to example and
 sample usage of the project. The structure and layout of this directory is not
@@ -412,7 +414,7 @@ fo examples and samples.
 
 ## `external/` ## {#tld.external}
 
-The presence of this directory is not required.
+This directory is not required.
 
 The `external/` directory is reserved for embedding of external projects. Each
 embedded project should occupy a single subdirectory of `external/`.
@@ -428,37 +430,9 @@ Subdirectories of `external/` SHOULD NOT be modified as part of regular project
 development. Subdirectories should remain as close to their upstream source as
 possible.
 
-## `extras/` ## {#tld.extras}
-
-The presence of this directory is not required.
-
-The `extras/` directory is designated for containing additional submodules for
-the project which build upon the main component(s). This may include submodules
-that are not part of the project's "default" build, or otherwise impose special
-requirements to be used.
-
-For example, the following might be candidates for `extra/` rather than regular
-components:
-
-1. "Language bindings" or extra libraries that provide integrations of the
-    project with programming languages or runtimes different from its own.
-2. "Platform bindings" or extra libraries (plugins) that integrate the project
-    with a particular platform. For example, a windowing library that needs to
-    understand how to talk with Windows, Quartz, X11, and Wayland would include
-    its platform integration implementations in this directory.
-3. "Contributed" submodules. Additional submodules that are contributed by the
-    project's users and included in upstream, but are not officially supported
-    by the project.
-4. Optional submodules that require additional dependencies, or may be
-    prohibitive to include for all users. For example, Qt's Webkit module is
-    prohibitively time consuming to build, and it requires the presence of
-    dependencies that are only required exactly for that one component.
-
-`extras/` is a [[#submod.root|submodule root]].
-
 ## `data/` ## {#tld.data}
 
-The presence of this directory is not required.
+This directory is not required.
 
 The `data/` directory is designated for holding project files which should be
 included in revision control, but are not explicitly code. For example,
@@ -469,7 +443,7 @@ The structure and layout of this directory is not prescribed by this document.
 
 ## `tools/` ## {#tld.tools}
 
-The presence of this directory is not required.
+This directory is not required.
 
 The `tools/` directory is designated for holding extra scripts and tools related
 to developing and contributing to the project. For example, turn-key build
@@ -485,6 +459,13 @@ itself into [[#submod|submodules]]. Its presence excludes the [[#tld.src|src/]]
 and [[#tld.include|include/]] directories.
 
 See [[#submod]] and [[#submod.libs]].
+
+## `extras/` ## {#tld.extras}
+
+This directory is not required.
+
+`extras/` is a [[#submod.root|submodule root]]. See [[#submod]] and
+[[#submod.extras]].
 
 # Source Tree Layout # {#src-layout}
 
@@ -538,7 +519,7 @@ If sources and headers are split, the path from the project or submodules root
 to the header will be `include/geo/shapes/circle.hpp`, and the path to the
 compiled source file will be `src/geo/shapes/circle.cpp`. If merging headers
 and sources, then the header will appear as a sibling in
-`src/geo/shapes/circle.hpp`. The unit test for this file will appear at
+`src/geo/shapes/circle.hpp`. The unit test for this component will appear at
 `src/geo/shapes/circle.test.cpp`.
 </div>
 
@@ -596,7 +577,7 @@ submodules:
 : Submodule Root
 :: A directory whose child directories are [[#submod.dir|submodules]].
 
-Submodule directories include:
+Submodule roots include:
 
 - [[#tld.extras]]
 - [[#submod.libs]]
@@ -626,6 +607,61 @@ The `libs/` directory is for *main* submodules. It is a
 [[#submod.root|submodule root]].
 
 When the `libs/` directory is present, the top-level `src/` and `include/`
-directories MUST NOT be present.
+directories MUST NOT be present. Instead of having a root source tree, a project
+using `libs/` for submodules should instead refactor itself such that the
+project has a common basis submodule upon which other submodules will may
+depend.
+
+The main difference between `libs/` and [[#tld.extras|extras/]] is that the
+`libs/` submodules found in `libs/` should be built _by default_, although a
+consumer may opt-out of the submodules on an as-needed basis.
+
+## `extras/` ## {#submod.extras}
+
+The `extras/` directory is designated for containing additional submodules for
+the project which build upon the main component(s). This may include submodules
+that are not part of the project's "default" build, or otherwise impose special
+requirements to be used.
+
+For example, the following might be candidates for `extra/` rather than regular
+components:
+
+1. "Language bindings" or extra libraries that provide integrations of the
+    project with programming languages or runtimes different from its own.
+2. "Platform bindings" or extra libraries (plugins) that integrate the project
+    with a particular platform. For example, a windowing library that needs to
+    understand how to talk with Windows, Quartz, X11, and Wayland would include
+    its platform integration implementations in this directory.
+3. "Contributed" submodules. Additional submodules that are contributed by the
+    project's users and included in upstream, but are not officially supported
+    by the project.
+4. Optional submodules that require additional dependencies, or may be
+    prohibitive to include for all users. For example, Qt's Webkit module is
+    prohibitively time consuming to build, and it requires the presence of
+    dependencies that are only required exactly for that one component.
+
+# Build Systems # {#builds}
+
+This document does not mandate any particular build system. The only
+requirements is that the chosen build system support the layout herein defined.
+
+# Libraries # {#libraries}
+
+For library projects, a source tree SHOULD correspond *exactly one* library.
+That is, *at most one one* linkable result, and *exactly one* public include
+directory. A single `#include` tree MUST NOT require linking more than one
+library to access all symbols exported from that tree.
+
+Note: Submodules, having their own source tree, may each contain a library that
+can be linked and consumed independently.
+
+A single source tree SHOULD NOT vary its public interface based on anything
+other than the target platform. This has several big implications, including
+(but not limited to) the following:
+
+- A library SHOULD NOT offer the user controls for tweaking its public
+    interface.
+- A library SHOULD NOT change its public interface based on the
+    presence/absence of external software.
 
 # Open Questions # {#open-qs}
