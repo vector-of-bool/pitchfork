@@ -1,5 +1,6 @@
 #include "./files.hpp"
 
+#include <pf/file_template.hpp>
 #include <pf/new/dirs.hpp>
 #include <pf/new/project.hpp>
 
@@ -12,12 +13,13 @@
 
 CMRC_DECLARE(pf_templates);
 
-void pf::create_files(const pf::new_project_params& params, std::error_code& ec) {
+void pf::create_files(const pf::new_project_params& params) {
+    pf::template_renderer trr{params.directory, cmrc::pf_templates::get_filesystem()};
     // The first file path will be based on the namespace root namespace
     auto ns_path = path_for_namespace(params.root_namespace);
     // The first file paths:
-    auto first_src    = params.directory / "src" / ns_path / (params.first_file_stem + ".cpp");
-    auto first_header = params.directory / (params.separate_headers ? "include" : "src") / ns_path
+    auto first_src    = "src" / ns_path / (params.first_file_stem + ".cpp");
+    auto first_header = (params.separate_headers ? "include" : "src") / ns_path
         / (params.first_file_stem + ".hpp");
 
     // Prepare the include guard string by replacing non-ident elements with '_'
@@ -28,50 +30,21 @@ void pf::create_files(const pf::new_project_params& params, std::error_code& ec)
     boost::to_upper(guard);
 
     // Set up the template render context
-    kainjow::mustache::data ctx;
-    ctx.set("root_ns", params.root_namespace);
-    ctx.set("first_stem", params.first_file_stem);
-    ctx.set("ns_path", ns_path.string());
-    ctx.set("guard_def", guard);
+    trr.set("root_ns", params.root_namespace);
+    trr.set("first_stem", params.first_file_stem);
+    trr.set("ns_path", ns_path.string());
+    trr.set("guard_def", guard);
 
-    auto templates_fs = cmrc::pf_templates::get_filesystem();
-
-    auto render = [&](std::string path) {
-        auto resource = templates_fs.open(path);
-        auto mustache = kainjow::mustache::mustache{std::string{resource.begin(), resource.end()}};
-        if (!mustache.is_valid()) {
-            throw std::runtime_error("Error rendering template file: " + path + ": "
-                                     + mustache.error_message());
-        }
-        return mustache.render(ctx);
-    };
-
-    // Write the source file
-    write_file(first_src, render("base/first_source.in.cpp"), ec);
-    if (ec) {
-        return;
-    }
-
-    // Write the header file
-    write_file(first_header, render("base/first_header.in.hpp"), ec);
-    if (ec) {
-        return;
-    }
+    // Base files
+    trr.render_to_file("base/first_source.in.cpp", first_src);
+    trr.render_to_file("base/first_header.in.hpp", first_header);
 
     // Optional files
     if (params.create_examples) {
-        write_file(params.directory / "examples/example1.cpp",
-                   render("base/first_example.in.cpp"),
-                   ec);
-        if (ec) {
-            return;
-        }
+        trr.render_to_file("base/first_example.in.cpp", "examples/example1.cpp");
     }
 
     if (params.create_tests) {
-        write_file(params.directory / "tests/my_test.cpp", render("base/first_test.in.cpp"), ec);
-        if (ec) {
-            return;
-        }
+        trr.render_to_file("base/first_test.in.cpp", "tests/my_test.cpp");
     }
 }

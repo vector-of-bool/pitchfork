@@ -4,6 +4,8 @@ add_library(
     pf/fs.cpp
     pf/pitchfork.hpp
     pf/pitchfork.cpp
+    pf/file_template.hpp
+    pf/file_template.cpp
     pf/new.hpp
     pf/new.cpp
     pf/new/params.hpp

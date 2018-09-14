@@ -283,11 +283,10 @@ public:
         params.build_system = bs;
 
         // Create the project!
-        pf::create_project(params, ec);
-        if (ec) {
-            _cli.console->error("Failed to prepare directories for new project ({}): {}",
-                                new_pr_dir,
-                                ec.message());
+        try {
+            pf::create_project(params);
+        } catch (const std::system_error& e) {
+            _cli.console->error("Failed to create project in {}: {}", new_pr_dir, ec.message());
             return 1;
         }
         return 0;

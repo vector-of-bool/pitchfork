@@ -20,21 +20,12 @@ std::string pf::namespace_for_name(const std::string& name) {
     return ns;
 }
 
-void pf::create_project(const pf::new_project_params& params, std::error_code& ec) {
+void pf::create_project(const pf::new_project_params& params) {
     assert(!params.name.empty() && "No name for project");
     assert(!params.root_namespace.empty() && "No namespace for project!");
-    pf::create_directories(params, ec);
-    if (ec) {
-        return;
-    }
-    pf::create_files(params, ec);
-    if (ec) {
-        return;
-    }
+    pf::create_directories(params);
+    pf::create_files(params);
     if (params.build_system == pf::build_system::cmake) {
-        pf::create_cmake_files(params, ec);
-        if (ec) {
-            return;
-        }
+        pf::create_cmake_files(params);
     }
 }

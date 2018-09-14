@@ -8,17 +8,16 @@ namespace fs = pf::fs;
 
 namespace {
 
-fs::path create_project(const pf::new_project_params& params) {
+fs::path create_test_project(const pf::new_project_params& params) {
     std::error_code ec;
     INFO("Project name: " + params.name);
     INFO("Project namespace: " + params.root_namespace);
-    INFO(params.directory)
+    INFO("Project directory: " + params.directory.string());
     fs::remove_all(params.directory, ec);
     if (ec && ec != std::errc::no_such_file_or_directory) {
         REQUIRE_FALSE(ec);
     }
-    pf::create_project(params, ec);
-    REQUIRE_FALSE(ec);
+    REQUIRE_NOTHROW(pf::create_project(params));
     return params.directory;
 }
 
@@ -34,7 +33,7 @@ fs::path expected_for(const std::string& name) {
 }
 
 void generate_and_compare(const pf::new_project_params& params, const std::string& name) {
-    auto dir  = create_project(params);
+    auto dir  = create_test_project(params);
     auto diff = pf::test::compare_fs_tree(dir, expected_for(name));
     CHECK_FALSE(diff);
 }

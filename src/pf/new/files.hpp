@@ -5,7 +5,7 @@
 
 namespace pf {
 
-void create_files(const pf::new_project_params& params, std::error_code& ec);
+void create_files(const pf::new_project_params& params);
 
 }  // namespace pf
 
