@@ -94,21 +94,21 @@ answers for *physical design*.
 
 The most fundamental unit of *physical design* is the **Component**.
 
-A *component* SHOULD correspond to exactly two files: A *header* and a *source*
+A *component* should correspond to exactly two files: A *header* and a *source*
 file. For some *rare* cases it may be beneficial to use more than a single
 source file in a single physical component, but it may be a sign that further
 refactoring is needed.
 
-Additionally, a component MAY have a test source file, but it is not considered
+Additionally, a component may have a test source file, but it is not considered
 a part of the physical component.
 
 ### Logical/Physical Coherence ### {#intro.bg.coherence}
 
 This document assumes that developers will work to maintain logical/physical
-*coherence*. There MUST be a coherent relationship between the logical and
-physical components of a system, and a single logical component MUST NOT be
-spread across multiple physical components. Multiple logical components SHOULD
-NOT appear within the same physical component.
+*coherence*. There must be a coherent relationship between the logical and
+physical components of a system, and a single logical component must not be
+spread across multiple physical components. Multiple logical components should
+not appear within the same physical component.
 
 Note: *Logical components* can include more than an individual class or
 function. For example, it may include classes representing private data (for
@@ -116,7 +116,7 @@ the PIMPL pattern), or `friend` classes and functions. Blindly splitting every
 class and function into individual physical components is not required nor
 recommended.
 
-Physical components MUST NOT form cyclic dependencies.
+Physical components must not form cyclic dependencies.
 
 <div class="example">
 **Example of friendship**
@@ -265,29 +265,29 @@ of a project which can be consumed on as-needed basis. See the
 
 ## Project Files ## {#intro.files}
 
-PFL prescribes several files that SHOULD be present in the root of the project:
+PFL prescribes several files that should be present in the root of the project:
 
-- A `README` file SHOULD be present. It should be easily readable in plaintext,
-    but may use "enhanced" plaintext like Markdown or similar. It SHOULD
+- A `README` file should be present. It should be easily readable in plaintext,
+    but may use "enhanced" plaintext like Markdown or similar. It should
     contain a description of the contents of the directory and subdirectories.
-- A `LICENSE` file MUST be present for projects that wish to redistribute
-    themselves. It MUST be plaintext (ie. not enhanced with markup).
+- A `LICENSE` file must be present for projects that wish to redistribute
+    themselves. It must be plaintext (ie. not enhanced with markup).
 
-Tool-support files, such as `.gitignore` and `.clang-format`, MAY be present in
+Tool-support files, such as `.gitignore` and `.clang-format`, may be present in
 this directory.
 
 Other files in the root directory must be pertinent to the build system of the
-project. Other files SHOULD NOT appear in the root of the project.
+project. Other files should not appear in the root of the project.
 
 ## Project Directories ## {#intro.dirs}
 
-PFL prescribes several directories that SHOULD appear at the root of the project
+PFL prescribes several directories that should appear at the root of the project
 tree. Not all of the directories are required, but they have an assigned
 purpose, and no other directory in the filesystem may assume the role of one of
 these directories. That is, these directories must be the ones used if their
 purpose is required.
 
-Other directories SHOULD NOT appear at the root.
+Other directories should not appear at the root.
 
 Note: If you have a need not fulfilled by a PFL directory listed below, that is
 a bug in this specification, and I would love to hear from you! Before
@@ -295,21 +295,21 @@ reporting, double-check that what you need isn't listed below and in the
 following sections.
 
 : [[#tld.build|build/]]
-:: A special directory that SHOULD NOT be considered part of the source of the
-    project. Used for storing ephemeral build results. MUST NOT be checked into
-    source control. If using source control, MUST be ignored using source
+:: A special directory that should not be considered part of the source of the
+    project. Used for storing ephemeral build results. must not be checked into
+    source control. If using source control, must be ignored using source
     control ignore-lists.
 
 : [[#tld.src|src/]]
-:: Main compilable source location. MUST be present for projects with compiled
+:: Main compilable source location. must be present for projects with compiled
     components that do not use submodules.
 
     In the presence of [[#tld.include|include/]], also contains private
     headers.
 
 : [[#tld.include|include/]]
-:: Directory for public headers. MAY be present. MAY be omitted for projects
-    that do not distinguish between private/public headers. MAY be omitted for
+:: Directory for public headers. may be present. may be omitted for projects
+    that do not distinguish between private/public headers. may be omitted for
     projects that use submodules.
 
 : [[#tld.tests|tests/]]
@@ -338,22 +338,22 @@ following sections.
 
 # Top-Level Directories # {#tld}
 
-Pitchfork specifies several top-level directories. Other directories SHOULD NOT
+Pitchfork specifies several top-level directories. Other directories should not
 be present in the root directory, except for what is required by other tooling.
 
 ## `build/` ## {#tld.build}
 
 This directory is not required, but its name should be reserved.
 
-The `build/` directory is special in that it MUST NOT be committed to a source
-control system. A user downloading the codebase SHOULD NOT see a `build/`
+The `build/` directory is special in that it must not be committed to a source
+control system. A user downloading the codebase should not see a `build/`
 directory present in the project root, but one may be created in the course of
 working with the software. The `_build/` directory is also reserved.
 
 Note: Some build systems may commandeer the `build/` directory for themselves.
 In this case, the directory `_build/` should be used in place of `build/`.
 
-The `build/` directory MAY be used for ephemeral build results. Other uses of
+The `build/` directory may be used for ephemeral build results. Other uses of
 the directory are not permitted.
 
 Creation of additional directories for build results in the root directory is
@@ -370,35 +370,36 @@ related. Be sure to also read its section in addition to this one.
 
 The purpose of the `include/` directory is to hold *public API* headers.
 
-Note: If not distinguishing between *public* and *private* headers, instead
-use [[#tld.src|src/]] for *all source files*.
+The `include/` directory should not be used if using
+[[#src.header-placement.merged]].
 
-The placement of files and directories in `include/` MUST adhere to the
-requirements described in [[#src-layout]].
+See [[#src]].
 
 ## `src/` ## {#tld.src}
 
 Note: The `src/` and [[#tld.include|include/]] directories are very closely
 related. Be sure to also read its section in addition to this one.
 
-The purpose of the `src/` directory is:
+The purpose and content of `src/` depends on whether the project authors choose
+to follow [[#src.header-placement.merged]] or
+[[#src.header-placement.separate]].
 
-1. To hold compilable source files (`.cpp` files)
-2. **If using an** [[#tld.include|include/]] **directory**, to hold private
-    headers (those header that project consumers should not consume).
-3. **Otherwise**, holds all headers.
-
-The placement of files and directories in `src/` MUST adhere to the requirements
-outlined in [[#src-layout]].
+See [[#src]].
 
 ## `tests/` ## {#tld.tests}
 
 This directory is not required.
 
-The `tests/` directory is reserved for source files related to project tests.
+The `tests/` directory is reserved for source files related to (non-unit) tests
+for the project.
+
 The structure and layout of this directory is not prescribed by this document.
 
-Project maintainers MUST provide a way for consumers to disable the compilation
+A project which can be embedded in another project (such as via
+[[#tld.external]]), must disable its `tests/` directory if it can detect that it
+is being built as an embedded sub-project.
+
+Project maintainers must provide a way for consumers to disable the compilation
 and running of tests, especially for the purpose of embedding.
 
 ## `examples/` ## {#tld.examples}
@@ -409,7 +410,7 @@ The `examples/` directory is reserved for source files related to example and
 sample usage of the project. The structure and layout of this directory is not
 prescribed by this document.
 
-Project maintainers MUST provide a way for consumers to disable the compilation
+Project maintainers must provide a way for consumers to disable the compilation
 fo examples and samples.
 
 ## `external/` ## {#tld.external}
@@ -419,14 +420,14 @@ This directory is not required.
 The `external/` directory is reserved for embedding of external projects. Each
 embedded project should occupy a single subdirectory of `external/`.
 
-`external/` SHOULD NOT contain files other than those required by tooling.
+`external/` should not contain files other than those required by tooling.
 
-This directory MAY be automatically populated, either partially or completely,
+This directory may be automatically populated, either partially or completely,
 by tools (eg. `git` submodules) as part of a build process. In this case,
-projects MUST declare the auto-populated subdirectories as ignored by relevant
+projects must declare the auto-populated subdirectories as ignored by relevant
 source control systems.
 
-Subdirectories of `external/` SHOULD NOT be modified as part of regular project
+Subdirectories of `external/` should not be modified as part of regular project
 development. Subdirectories should remain as close to their upstream source as
 possible.
 
@@ -450,11 +451,11 @@ to developing and contributing to the project. For example, turn-key build
 scripts, linting scripts, code-generation scripts, test scripts, or other tools
 that may be useful to a project develop.
 
-The contents of this directory SHOULD NOT be relevant to a project consumer.
+The contents of this directory should not be relevant to a project consumer.
 
 ## `libs/` ## {#tld.libs}
 
-The `libs/` directory MUST NOT be used unless the project wishes to subdivide
+The `libs/` directory must not be used unless the project wishes to subdivide
 itself into [[#submod|submodules]]. Its presence excludes the [[#tld.src|src/]]
 and [[#tld.include|include/]] directories.
 
@@ -467,15 +468,129 @@ This directory is not required.
 `extras/` is a [[#submod.root|submodule root]]. See [[#submod]] and
 [[#submod.extras]].
 
-# Source Tree Layout # {#src-layout}
+# Library Source Layout # {#src}
+
+A *library source tree* refers to the layout of source code files that comprise
+a single library, which is a collection of code that is exposed to the library's
+*consumer*.
+
+## Header File Placement ## {#src.header-placement}
+
+This document supports two different methods of placing headers in a single
+library: *separate* and *merged*. These two methods are mutually exclusive
+within a single library source tree.
+
+### Separate Header Placement ### {#src.header-placement.separate}
+
+In *separated* placement, there are two *source directories*, [[#tld.include]]
+and [[#tld.src]]. The `include/` directory is designated to contain the *public*
+headers of the library, while the *src/* directory is designated to contain
+the compilable source code and *private* headers.
+
+Note: Not all projects will necessarily have private headers.
+
+In separate placement, a single physical component is split between the two
+directories. The relative path to the parent directory of a compilable source
+file in the `src/` directory must be equivalent to the relative path to the
+parent directory of the header in the `include/` directory that corresponds to
+the compilable source file.
+
+<div class="example">
+Given a physical component of a header file `meow.hpp` and a source file
+`meow.cpp`, we might place the header at `include/cat/sounds/meow.hpp`. The
+relative path from `include/` to the parent directory of `meow.hpp` is
+`cat/sounds.`
+
+Thus, we can compose the path to the compilable source file as joining the
+source directory name `src`, the relative path `cat/sounds`, and the filename
+`meow.cpp` to get the path `src/cat/sounds/meow.cpp`. The following layout
+results:
+
+```text
+<root>/
+    include/
+        cat/
+            sounds/
+                meow.hpp
+    src/
+        cat/
+            sounds/
+                meow.cpp
+```
+</div>
+
+Note: The purpose of the deterministic header/file path relationship is to aid
+both tools and human viewers in understanding and manipulating the source
+directory structure.
+
+Note: The relative paths of these physical components is not arbitrary. See
+[[#src.layout]].
+
+Consumers of a library using separated header layout should be given the path to
+the [[#tld.include]] directory as the sole include search directory for the
+library's public interface. This prevents users from being able to `#include`
+paths which exist only in the `src/` directory.
+
+The library itself should be compiled with both its [[#tld.include]] and
+[[#tld.src]] directories as include search directories. This ensures that the
+library itself can access all files within both source directories.
+
+### Merged Header Placement ### {#src.header-placement.merged}
+
+In *merged* header placement, there is a single *source directory*,
+[[#tld.src]].
+
+Much like with separated placement, the relative path from the source directory
+to the parent of directory of the files of a physical component must be the
+same. This implies that the files of a physical component will always be
+*sibling* files in the same directory.
+
+<div class="example">
+Given a physical component with header `hiss.hpp` and `hiss.cpp`, and a relative
+path of `cat/sounds`, the resulting layout is defined:
+
+```text
+<root>/
+    src/
+        cat/
+            sounds/
+                hiss.hpp
+                hiss.cpp
+```
+</div>
+
+## Unit Test Placement ## {#src.unit-tests}
+
+This document distinguishes between *unit* tests, and other tests. Unit tests
+are tests that roughly correspond to a single single *unit* of the source code.
+This may be a physical component, public API, or combination thereof.
+
+A unit test should have exactly one compilable source file, and that filename
+stem should be the same as the filename stem of the physical component under
+test, with a `.test` appended to it. For example, a test for the physical
+component comprised of `meow.hpp` and `meow.cpp` will be named `meow.test.cpp`.
+This unit test source file should be placed in the same directory as a
+compilable source file of the physical component under test. Therefore, when
+the unit has a compilable source file, the unit test source file will appear as
+a sibling of the compilable source file.
+
+## Source Directory Layout ## {#src.layout}
 
 For the purposes of this section, the [[#tld.include|include/]] and
 [[#tld.src|src/]] top-level directories are both included in the definition of
-"source directories." They are root of the *source tree*. They are named as such
-because they contain the primary "source files" of the source language (C and/or
-C++).
+"source directories." They are root of the *library source tree*. They are
+named as such because they contain the primary "source files" of the source
+language (C and/or C++).
 
-Header files and source files SHOULD correspond to a logical component of the
+No non-source-code files will should be placed *or generated* in any
+subdirectories of a source directory. That is, the root of a source directory
+may contain non-source-code files, but no child directories should.
+
+Conversely, no source-code files should be placed in the root of a source
+directory. That is, all source files must have *qualified paths* relative to the
+root of their source directory.
+
+Header files and source files should correspond to a logical component of the
 project. For example, a `geometry` library might contain a `circle` class along
 a single header and (optional) source file to represent it. If no other
 logical components appear in that header and/or source file, the logical
@@ -483,7 +598,7 @@ component can be said to be the "main component" of the corresponding source
 component. The main logical component may be a `class`, function, or some
 grouping thereof.
 
-The layout of the source tree SHOULD closely correspond to the namespace
+The layout of the source tree should closely correspond to the namespace
 structure of the project.
 
 In C, there is no language-level concept of a namespace, but there is the
@@ -502,10 +617,10 @@ can then be used to generate a qualified path by which the physical component
 can be found. In this way, physical components can be considered
 "content-addressable".
 
-Source files SHOULD be placed in a directory relative to the source tree root
+Source files should be placed in a directory relative to the source
 directory where the relative path is composed by joining the elements of the
 component namespace as intermediate directories. The stem of the source filename
-SHOULD correspond to the name of the logical component which it declares or
+should correspond to the name of the logical component which it declares or
 defines.
 
 <div class="example">
@@ -515,11 +630,14 @@ name as a basis for the filename of `circle`. Thus, the full path to the sources
 defining the logical component are `geo/shapes/circle.hpp` and
 `geo/shapes/circle.cpp`.
 
-If sources and headers are split, the path from the project or submodules root
-to the header will be `include/geo/shapes/circle.hpp`, and the path to the
-compiled source file will be `src/geo/shapes/circle.cpp`. If merging headers
-and sources, then the header will appear as a sibling in
-`src/geo/shapes/circle.hpp`. The unit test for this component will appear at
+If using [[#src.header-placement.separate]], the path from the project or
+submodule root to the header will be `include/geo/shapes/circle.hpp`, and the
+path to the compiled source file will be `src/geo/shapes/circle.cpp`.
+
+If using [[#src.header-placement.merged]], then the header will appear as a
+sibling in `src/geo/shapes/circle.hpp`.
+
+The unit test for this component will appear at
 `src/geo/shapes/circle.test.cpp`.
 </div>
 
@@ -586,7 +704,7 @@ Each subdirectory of a submodule root must correspond to exactly one submodule.
 
 ## Submodule Directory ## {#submod.dir}
 
-A submodule is represented as a subdirectory of the project which MAY contain
+A submodule is represented as a subdirectory of the project which may contain
 the following directories:
 
 - [[#tld.src|src/]] for submodule sources
@@ -598,7 +716,7 @@ the following directories:
 
 Note: Most of the [[#tld|top-level directories]] are *absent* from this list.
 
-Submodules directories SHOULD NOT contain other files or directories except
+Submodules directories should not contain other files or directories except
 those required by tooling.
 
 ## `libs/` ## {#submod.libs}
@@ -607,7 +725,7 @@ The `libs/` directory is for *main* submodules. It is a
 [[#submod.root|submodule root]].
 
 When the `libs/` directory is present, the top-level `src/` and `include/`
-directories MUST NOT be present. Instead of having a root source tree, a project
+directories must not be present. Instead of having a root source tree, a project
 using `libs/` for submodules should instead refactor itself such that the
 project has a common basis submodule upon which other submodules will may
 depend.
@@ -647,21 +765,21 @@ requirements is that the chosen build system support the layout herein defined.
 
 # Libraries # {#libraries}
 
-For library projects, a source tree SHOULD correspond *exactly one* library.
+For library projects, a source tree should correspond to *exactly one* library.
 That is, *at most one one* linkable result, and *exactly one* public include
-directory. A single `#include` tree MUST NOT require linking more than one
+directory. A single `#include` tree must not require linking more than one
 library to access all symbols exported from that tree.
 
 Note: Submodules, having their own source tree, may each contain a library that
 can be linked and consumed independently.
 
-A single source tree SHOULD NOT vary its public interface based on anything
+A single source tree should not vary its public interface based on anything
 other than the target platform. This has several big implications, including
 (but not limited to) the following:
 
-- A library SHOULD NOT offer the user controls for tweaking its public
+- A library should not offer the user controls for tweaking its public
     interface.
-- A library SHOULD NOT change its public interface based on the
+- A library should not change its public interface based on the
     presence/absence of external software.
 
 # Open Questions # {#open-qs}
