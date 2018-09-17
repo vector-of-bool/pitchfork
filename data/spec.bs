@@ -3,7 +3,7 @@ Title: The Pitchfork Layout (PFL)
 Shortname: cxx-pfl
 Level: 1
 Status: DREAM
-Group: WGNAMEORWHATEVER
+Group: wg21
 URL: https://vector-of-bool.github.io/psl.html
 Markup Shorthands: markdown yes
 Editor: Colby Pike, vectorofbool@gmail.com, https://vector-of-bool.github.io/
