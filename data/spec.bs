@@ -569,13 +569,17 @@ path of `cat/sounds`, the resulting layout is defined:
 ```
 </div>
 
-## Unit Test Placement ## {#src.unit-tests}
+## Test Placement ## {#src.tests}
 
 This document distinguishes between *unit* tests, and other tests. Unit tests
 are tests that roughly correspond to a single single *unit* of the source code.
-This may be a physical component, public API, or combination thereof.
+This may be a physical component, public API, or combination thereof. The
+distinguishing of a unit test has implications on where it may be placed.
 
-A unit test should have exactly one compilable source file, and that filename
+### Merged Test Placement ### {#src.tests.merged}
+
+Optional but recommended is to use *merged* test placement. In this method,
+a unit test should have exactly one compilable source file, and that filename
 stem should be the same as the filename stem of the physical component under
 test, with a `.test` appended to it. For example, a test for the physical
 component comprised of `meow.hpp` and `meow.cpp` will be named `meow.test.cpp`.
@@ -583,6 +587,12 @@ This unit test source file should be placed in the same directory as a
 compilable source file of the physical component under test. Therefore, when
 the unit has a compilable source file, the unit test source file will appear as
 a sibling of the compilable source file.
+
+### Separate Test Placement ### {#src.tests.separate}
+
+If not using merged tests, all tests should be placed within the
+[[#tld.tests|tests/]] top-level directory. There are no mandates on the layout
+within `tests/`.
 
 ## Source Directory Layout ## {#src.layout}
 
