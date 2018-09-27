@@ -22,9 +22,7 @@ endif()
 find_package(spdlog 1.1.0 REQUIRED)
 find_package(Boost 1.68.0 REQUIRED)
 
-# Include embedded third-party components we need for the build
-add_subdirectory(third_party)
-
+# Other deps
 find_package(Filesystem REQUIRED)
 find_package(Bikeshed)
 find_package(Yarn)
@@ -38,17 +36,20 @@ if(NOT MSVC)
 endif()
 
 add_subdirectory(data)
-add_subdirectory(src)
 
-option(BUILD_TESTS "Build tests" ON)
-if(BUILD_TESTS AND (PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR))
-    enable_testing()
-    add_subdirectory(tests)
-endif()
+include(PitchforkAuto)
+pf_auto(
+    OUTPUT_NAME pf
+    ALIAS pf::pitchfork
+    LINK
+        CXX::Filesystem
+        Boost::boost
+        spdlog::spdlog
+    PRIVATE_LINK
+        kainjow::mustache
+        pf::templates
+    EXE_LINK
+        taywee::args
+    )
 
-option(BUILD_EXAMPLES "Build examples" ON)
-if(BUILD_EXAMPLES AND (PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR))
-    add_subdirectory(examples)
-endif()
-
-add_subdirectory(extras)
+include(CPack)
