@@ -333,6 +333,9 @@ following sections.
 :: Directory containing development utilities, such as build and refactoring
     scripts
 
+: [[#tld.docs|docs/]]
+:: Directory for project documentation.
+
 : [[#tld.libs|libs/]]
 :: Directory for main project submodules.
 
@@ -452,6 +455,13 @@ scripts, linting scripts, code-generation scripts, test scripts, or other tools
 that may be useful to a project develop.
 
 The contents of this directory should not be relevant to a project consumer.
+
+## `docs/` ## {#tld.docs}
+
+This directory is not required.
+
+The `docs/` directory is designated to contain project documentation. The
+documentation process, tools, and layout is not prescribed by this document.
 
 ## `libs/` ## {#tld.libs}
 
@@ -712,7 +722,7 @@ the following directories:
 - [[#tld.tests|tests/]] for submodule tests
 - [[#tld.data|data/]] for submodule data
 - [[#tld.examples|examples/]] for examples
-<!-- - [[#tld.docs|docs/]] for submodule documentation -->
+- [[#tld.docs|docs/]] for submodule documentation
 
 Note: Most of the [[#tld|top-level directories]] are *absent* from this list.
 
