@@ -37,7 +37,9 @@ endif()
 
 add_subdirectory(data)
 
-include(PitchforkAuto)
+set(PF_URL "file://${PROJECT_SOURCE_DIR}/extras/pf-cmake" CACHE INTERNAL "")
+include(Pitchfork)
+
 pf_auto(
     OUTPUT_NAME pf
     ALIAS pf::pitchfork

@@ -1,14 +1,5 @@
 include_guard(GLOBAL)
 
-macro(_pf_lift varname)
-    set("${varname}" "${${varname}}" PARENT_SCOPE)
-endmacro()
-
-macro(_pf_set_up varname)
-    set("${varname}" "${ARGN}")
-    _pf_lift("${varname}")
-endmacro()
-
 include(CMakePackageConfigHelpers)
 
 function(pf_auto)
@@ -25,6 +16,8 @@ function(pf_auto)
         LINK
         PRIVATE_LINK
         EXE_LINK
+        SUBDIR_BEFORE
+        SUBDIR_AFTER
         )
     cmake_parse_arguments(PARSE_ARGV 0 ARG "${options}" "${args}" "${list_args}")
 
@@ -53,6 +46,11 @@ function(pf_auto)
     if(NOT DEFINED PROJECT_NAME)
         message(FATAL_ERROR "Please call project() before pf_auto()")
     endif()
+
+    # Before defining our project, add the subdirs
+    foreach(subdir IN LISTS ARG_SUBDIR_BEFORE)
+        add_subdirectory("${subdir}")
+    endforeach()
 
     # Must be called in the same dir as a project():
     get_filename_component(pr_dir "${PROJECT_SOURCE_DIR}" ABSOLUTE)
@@ -187,24 +185,32 @@ function(pf_auto)
         endif()
     endforeach()
 
+    get_directory_property(already_subdirs SUBDIRECTORIES)
+
     # Add the tests subdirectory
     get_filename_component(tests_dir "${PROJECT_SOURCE_DIR}/tests" ABSOLUTE)
     option(BUILD_TESTING "Build the testing tree" ON)
-    if(EXISTS "${tests_dir}/CMakeLists.txt" AND BUILD_TESTING AND is_root_project)
+    if(EXISTS "${tests_dir}/CMakeLists.txt" AND BUILD_TESTING AND is_root_project AND NOT tests_dir IN_LIST already_subdirs)
         add_subdirectory("${tests_dir}")
     endif()
 
     # Add the examples subdirectory
     get_filename_component(examples_dir "${PROJECT_SOURCE_DIR}/examples" ABSOLUTE)
     option(BUILD_EXAMPLES "Build examples" ON)
-    if(EXISTS "${examples_dir}/CMakeLists.txt" AND BUILD_EXAMPLES AND is_root_project)
+    if(EXISTS "${examples_dir}/CMakeLists.txt" AND BUILD_EXAMPLES AND is_root_project AND NOT examples_dir IN_LIST already_subdirs)
         add_subdirectory("${examples_dir}")
     endif()
 
     # Add the extras subdirectory
     get_filename_component(extras_dir "${PROJECT_SOURCE_DIR}/extras" ABSOLUTE)
-    if(EXISTS "${extras_dir}/CMakeLists.txt")
+    if(EXISTS "${extras_dir}/CMakeLists.txt" AND NOT extras_dirs IN_LIST already_subdirs)
         add_subdirectory("${extras_dir}")
+    endif()
+
+    # Add the data subdirectory
+    get_filename_component(data_dir "${PROJECT_SOURCE_DIR}/data" ABSOLUTE)
+    if(EXISTS "${data_dir}/CMakeLists.txt" AND NOT data_dir IN_LIST already_subdirs)
+        add_subdirectory("${data_dir}")
     endif()
 
     if(do_install)
