@@ -40,6 +40,9 @@ add_subdirectory(data)
 
 set(PF_URL "file://${PROJECT_SOURCE_DIR}/extras/pf-cmake" CACHE INTERNAL "")
 include(Pitchfork)
+file(GLOB_RECURSE pf_cmake_files CONFIGURE_DEPENDS extras/pf-cmake/*)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${pf_cmake_files})
+
 
 pf_auto(
     OUTPUT_NAME pf
