@@ -14,19 +14,19 @@ struct path_hash {
 };
 
 template <typename Pred>
-std::vector<fs::path> glob_impl(fs::path const& directory, Pred pred) {
-    std::vector<fs::path> result;
+std::set<fs::path> glob_impl(fs::path const& directory, Pred pred) {
+    std::set<fs::path> result;
 
     std::copy_if(fs::recursive_directory_iterator{directory},
                  fs::recursive_directory_iterator{},
-                 std::back_inserter(result),
+                 std::inserter(result, result.end()),
                  pred);
 
     return result;
 }
 }  // namespace
 
-std::vector<fs::path> pf::glob_sources(fs::path const& directory) {
+std::set<fs::path> pf::glob_sources(fs::path const& directory) {
     static std::unordered_set<fs::path, path_hash> SourceFileExtensions{
         fs::path{".c"},
         fs::path{".cc"},
@@ -40,7 +40,7 @@ std::vector<fs::path> pf::glob_sources(fs::path const& directory) {
     });
 }
 
-std::vector<fs::path> pf::glob_headers(fs::path const& directory) {
+std::set<fs::path> pf::glob_headers(fs::path const& directory) {
     static std::unordered_set<fs::path, path_hash> HeaderFileExtensions{
         fs::path{".h"},
         fs::path{".hh"},

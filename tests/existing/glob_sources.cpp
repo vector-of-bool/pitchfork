@@ -1,5 +1,7 @@
 #include <pf/existing/glob_sources.hpp>
 
+#include <algorithm>
+#include <iterator>
 #include <set>
 #include <stdexcept>
 
@@ -25,20 +27,19 @@ fs::path relative(fs::path const& path, fs::path const& base) {
 fs::path relative(fs::path const& path, fs::path const& base) { return fs::relative(path, base); }
 #endif
 
-std::vector<fs::path> make_relative(std::vector<fs::path> paths) {
-    auto base = fs::path{PF_TEST_BINDIR} / fs::path{"existing/sample/project"};
+std::set<fs::path> make_relative(std::set<fs::path> const& paths) {
+    static auto const base = fs::path{PF_TEST_BINDIR} / fs::path{"existing/sample/project"};
 
-    for (auto& path : paths) {
-        path = ::relative(path, base);
-    }
+    std::set<fs::path> result;
 
-    return paths;
+    std::transform(paths.begin(),
+                   paths.end(),
+                   std::inserter(result, result.end()),
+                   [](auto const& path) { return ::relative(path, base); });
+
+    return result;
 }
 
-template <template <typename...> typename Cont, typename Range>
-auto to(Range const& range) {
-    return Cont<std::decay_t<decltype(*range.begin())>>(range.begin(), range.end());
-}
 }  // namespace
 
 TEST_CASE("glob sources") {
@@ -55,8 +56,8 @@ TEST_CASE("glob sources") {
         fs::path{"src/project/source5.c++"},
     };
 
-    CHECK(::to<std::set>(::make_relative(
-              pf::glob_sources(fs::path{PF_TEST_BINDIR} / fs::path{"existing/sample/project"})))
+    CHECK(::make_relative(
+              pf::glob_sources(fs::path{PF_TEST_BINDIR} / fs::path{"existing/sample/project"}))
           == expected);
 }
 
@@ -74,7 +75,7 @@ TEST_CASE("glob headers") {
         fs::path{"src/project/header5.h++"},
     };
 
-    CHECK(::to<std::set>(::make_relative(
-              pf::glob_headers(fs::path{PF_TEST_BINDIR} / fs::path{"existing/sample/project"})))
+    CHECK(::make_relative(
+              pf::glob_headers(fs::path{PF_TEST_BINDIR} / fs::path{"existing/sample/project"}))
           == expected);
 }
