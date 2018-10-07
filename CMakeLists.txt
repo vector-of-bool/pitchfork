@@ -8,6 +8,8 @@ project(pitchfork
     DESCRIPTION "Libraries and programs for working with Pitchfork Layout projects"
     )
 
+option(PF_FORCE_TESTS_COLOR "Force colored output in tests" OFF)
+
 if(NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
 endif()
@@ -15,7 +17,7 @@ endif()
 # Ensure Conan deps are up-to-date
 find_package(Conan)
 if(Conan_FOUND)
-    conan_install(-b catch2)
+    conan_install()
 endif()
 
 # Import the deps that were setup by Conan
@@ -39,6 +41,8 @@ add_subdirectory(data)
 
 set(PF_URL "file://${PROJECT_SOURCE_DIR}/extras/pf-cmake" CACHE INTERNAL "")
 include(Pitchfork)
+
+enable_testing()
 
 pf_auto(
     OUTPUT_NAME pf
