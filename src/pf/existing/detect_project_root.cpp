@@ -8,7 +8,7 @@
 namespace fs = pf::fs;
 
 namespace {
-fs::path parse_cmakecache_homedir(fs::path const& cmakecache) {
+boost::optional<fs::path> parse_cmakecache_homedir(fs::path const& cmakecache) {
     std::string line;
 
     std::ifstream file{cmakecache};
@@ -22,12 +22,11 @@ fs::path parse_cmakecache_homedir(fs::path const& cmakecache) {
         }
     }
 
-    // TODO: actually handle this
-    std::abort();
+    return boost::none;
 }
 }  // namespace
 
-fs::path pf::detect_project_root(fs::path cur_dir) {
+boost::optional<fs::path> pf::detect_project_root(fs::path cur_dir) {
     for (; cur_dir.has_parent_path(); cur_dir = cur_dir.parent_path()) {
         if (fs::exists(cur_dir / "CMakeLists.txt")) {
             // If we see a CMakeLists.txt, but the parent directory also has a CMakeLists.txt,
@@ -46,6 +45,5 @@ fs::path pf::detect_project_root(fs::path cur_dir) {
         }
     }
 
-    // TODO: actually handle this
-    std::abort();
+    return boost::none;
 }

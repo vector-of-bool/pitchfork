@@ -1,5 +1,7 @@
 #include <pf/existing/detect_project_root.hpp>
 
+#include <boost/optional/optional_io.hpp>
+
 #include <catch2/catch.hpp>
 
 namespace fs = pf::fs;
@@ -27,6 +29,5 @@ TEST_CASE("detect project root") {
 TEST_CASE("no project root") {
     fs::path path;
 
-    // TODO: figure out what to test for
-    pf::detect_project_root(path);
+    CHECK(pf::detect_project_root(path) == boost::none);
 }
