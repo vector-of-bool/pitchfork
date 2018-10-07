@@ -12,19 +12,20 @@ if(NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
 endif()
 
-# Ensure Conan deps are up-to-date
-find_package(Conan)
-if(Conan_FOUND)
-    conan_install(-b catch2)
-endif()
+option(BUILD_SPEC "Build the Pitchfork document" ON)
 
-# Import the deps that were setup by Conan
-find_package(spdlog 1.1.0 REQUIRED)
+include(pmm.cmake)
+pmm(CONAN)
+conan_set_find_paths()
+
+# Find-package the Boost that Conan gave us
 find_package(Boost 1.68.0 REQUIRED)
 
-# Other deps
+# Other deps not controlled by Conan
 find_package(Filesystem REQUIRED)
-find_package(Bikeshed)
+if(BUILD_SPEC)
+    find_package(Bikeshed)
+endif()
 find_package(Yarn)
 include(CMakeRC)
 
@@ -46,7 +47,7 @@ pf_auto(
     LINK
         CXX::Filesystem
         Boost::boost
-        spdlog::spdlog
+        CONAN_PKG::spdlog
     PRIVATE_LINK
         kainjow::mustache
         pf::templates
