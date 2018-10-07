@@ -29,10 +29,12 @@ function(pf_add_test_exe name)
     target_link_libraries(${name} PRIVATE pf-test-lib)
     catch_discover_tests(${name}
         TEST_PREFIX ${name}::
-        EXTRA_ARGS $<$<BOOL:${PF_FORCE_TESTS_COLOR}>:--use-colour=yes>   )
+        EXTRA_ARGS $<$<BOOL:${PF_FORCE_TESTS_COLOR}>:--use-colour=yes>)
 endfunction()
 
 pf_add_test_exe(generate generate.cpp)
 
-pf_add_test_exe(existing existing/detect_project_root.cpp)
+pf_add_test_exe(existing
+    existing/detect_project_root.cpp
+    existing/glob_sources.cpp)
 configure_directory(existing/sample)

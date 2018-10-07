@@ -1,5 +1,5 @@
-#ifndef PF_EXISTING_DETECT_ROOT_HPP_INCLUDED
-#define PF_EXISTING_DETECT_ROOT_HPP_INCLUDED
+#ifndef PF_EXISTING_DETECT_PROJECT_ROOT_HPP_INCLUDED
+#define PF_EXISTING_DETECT_PROJECT_ROOT_HPP_INCLUDED
 
 #include <pf/fs.hpp>
 
@@ -10,4 +10,4 @@ fs::path detect_project_root(fs::path cur_dir = fs::current_path());
 
 }  // namespace pf
 
-#endif  // PF_EXISTING_DETECT_ROOT_HPP_INCLUDED
+#endif  // PF_EXISTING_DETECT_PROJECT_ROOT_HPP_INCLUDED
