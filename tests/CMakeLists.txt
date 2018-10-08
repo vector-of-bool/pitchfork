@@ -13,6 +13,9 @@ target_compile_definitions(pf-test-lib
     )
 
 function(configure_directory directory)
+    file(GLOB_RECURSE directory_contents CONFIGURE_DEPENDS "${directory}/*")
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${directory_contents})
+
     file(COPY "${directory}/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/${directory}/")
     file(GLOB_RECURSE directory_templates RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${directory}/*.in")
 
@@ -36,5 +39,6 @@ pf_add_test_exe(generate generate.cpp)
 
 pf_add_test_exe(existing
     existing/detect_project_root.cpp
-    existing/glob_sources.cpp)
+    existing/glob_sources.cpp
+    existing/update_source_files.cpp)
 configure_directory(existing/sample)

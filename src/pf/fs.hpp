@@ -8,14 +8,25 @@
 #include <experimental/filesystem>
 namespace pf {
 
-namespace fs = std::experimental::filesystem;
+namespace fs {
+using namespace ::std::experimental::filesystem;
+
+// std::experimental::filesystem doesn't have fs::relative
+fs::path relative(fs::path const& p, std::error_code& ec);
+
+fs::path relative(fs::path const& p, fs::path const& base = fs::current_path());
+
+fs::path relative(fs::path const& p, fs::path const& base, std::error_code& ec);
+}  // namespace fs
 
 }  // namespace pf
 #else
 #include <filesystem>
 namespace pf {
 
-namespace fs = std::filesystem;
+namespace fs {
+using namespace ::std::filesystem;
+}
 
 }  // namespace pf
 #endif

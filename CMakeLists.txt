@@ -22,7 +22,7 @@ endif()
 
 # Import the deps that were setup by Conan
 find_package(spdlog 1.1.0 REQUIRED)
-find_package(Boost 1.68.0 REQUIRED)
+find_package(Boost 1.68.0 REQUIRED COMPONENTS filesystem)
 
 # Other deps
 find_package(Filesystem REQUIRED)
@@ -52,6 +52,7 @@ pf_auto(
         Boost::boost
         spdlog::spdlog
     PRIVATE_LINK
+        Boost::filesystem
         kainjow::mustache
         pf::templates
     EXE_LINK

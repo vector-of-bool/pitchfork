@@ -10,23 +10,6 @@
 namespace fs = pf::fs;
 
 namespace {
-#if STD_FS_IS_EXPERIMENTAL
-fs::path relative(fs::path const& path, fs::path const& base) {
-    auto canonical_path = fs::canonical(path).string();
-    auto canonical_base = fs::canonical(base).string();
-
-    // if (!canonical_path.starts_with(canonical_base))
-    if (canonical_path.rfind(canonical_base) != 0) {
-        throw std::runtime_error{"path is not relative to supplied base"};
-    }
-
-    // + 1 to remove the `/`
-    return fs::path{canonical_path.substr(canonical_base.size() + 1)};
-}
-#else
-fs::path relative(fs::path const& path, fs::path const& base) { return fs::relative(path, base); }
-#endif
-
 std::set<fs::path> make_relative(std::set<fs::path> const& paths) {
     static auto const base = fs::path{PF_TEST_BINDIR} / fs::path{"existing/sample/project"};
 
@@ -35,7 +18,7 @@ std::set<fs::path> make_relative(std::set<fs::path> const& paths) {
     std::transform(paths.begin(),
                    paths.end(),
                    std::inserter(result, result.end()),
-                   [](auto const& path) { return ::relative(path, base); });
+                   [](auto const& path) { return fs::relative(path, base); });
 
     return result;
 }
