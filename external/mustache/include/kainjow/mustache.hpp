@@ -30,6 +30,7 @@
 #define KAINJOW_MUSTACHE_HPP
 
 #include <cassert>
+#include <cctype>
 #include <functional>
 #include <iostream>
 #include <memory>

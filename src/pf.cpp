@@ -18,7 +18,7 @@ namespace {
 using string_flag = args::ValueFlag<std::string>;
 using path_flag   = args::ValueFlag<fs::path>;
 
-class eof : public std::exception {};
+class reached_eof : public std::exception {};
 
 std::string get_input_line() {
     std::cout.flush();
@@ -26,7 +26,7 @@ std::string get_input_line() {
     std::string ret;
     std::getline(std::cin, ret);
     if (std::cin.eof()) {
-        throw eof();
+        throw reached_eof();
     }
     return ret;
 }
@@ -322,7 +322,7 @@ int main(int argc, char** argv) {
             assert(false && "No subcommand selected?");
             std::terminate();
         }
-    } catch (const eof&) {
+    } catch (const reached_eof&) {
         return 2;
     }
 }
