@@ -38,10 +38,13 @@ class CMakeConanFile(conans.ConanFile):
             )
             cmake.configure(
                 source_folder=self.source_folder,
-                args=list(*self.build_args, [
-                    '-DCMAKE_BUILD_TYPE={}'.format(bt),
-                    '--no-warn-unused-cli',
-                ]),
+                args=list(
+                    [
+                        '-DCMAKE_BUILD_TYPE={}'.format(bt),
+                        '--no-warn-unused-cli',
+                    ],
+                    *self.build_args
+                ),
             )
             cmake.build()
 
