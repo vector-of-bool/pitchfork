@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <fstream>
+#include <iterator>
 
 using namespace pf;
 using namespace pf::test;

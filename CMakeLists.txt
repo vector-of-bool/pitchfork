@@ -36,6 +36,8 @@ if(NOT MSVC)
     if(PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
         add_compile_options(-Werror)
     endif()
+else()
+    add_compile_options(/permissive-)
 endif()
 
 add_subdirectory(data)
