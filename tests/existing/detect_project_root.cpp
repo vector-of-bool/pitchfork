@@ -20,7 +20,7 @@ TEST_CASE("detect project root") {
     fs::path const expected = fs::path{PF_TEST_BINDIR} / fs::path{"existing/sample/project"};
 
     for (auto const& working_dir : cases) {
-        SECTION(working_dir) {
+        DYNAMIC_SECTION(working_dir) {
             CHECK(pf::detect_project_root(fs::path{PF_TEST_BINDIR} / working_dir) == expected);
         }
     }
