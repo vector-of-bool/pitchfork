@@ -4,26 +4,18 @@ set(sources
     project/source2.cc
     project/source3.cpp
     project/source4.cxx
-    project/source4.c++
+    project/source5.c++
     project/subfolder/source1.c
     project/subfolder/source2.cc
     project/subfolder/source3.cpp
     project/subfolder/source4.cxx
-    project/subfolder/source4.c++
+    project/subfolder/source5.c++
     )
 
 set(headers
     # headers
     project/header1.h
-    project/header2.hh
-    project/header3.hpp
-    project/header4.hxx
-    project/header4.h++
-    project/subfolder/header1.h
-    project/subfolder/header2.hh
-    project/subfolder/header3.hpp
-    project/subfolder/header4.hxx
-    project/subfolder/header4.h++)
+    project/subfolder/header4.hxx)
 
 add_library(my_project_lib
     # sources
@@ -31,74 +23,48 @@ add_library(my_project_lib
     project/source2.cc
     project/source3.cpp
     project/source4.cxx
-    project/source4.c++
+    project/source5.c++
     project/subfolder/source1.c
     project/subfolder/source2.cc
     project/subfolder/source3.cpp
     project/subfolder/source4.cxx
-    project/subfolder/source4.c++
+    project/subfolder/source5.c++
 )
 
 add_library(my_project_lib2
-    # sources, headers
+    # sources
     project/source1.c
-    project/header1.h
     project/source2.cc
-    project/header2.hh
     project/source3.cpp
-    project/header3.hpp
     project/source4.cxx
-    project/header4.hxx
-    project/source4.c++
-    project/header4.h++
+    project/source5.c++
     project/subfolder/source1.c
-    project/subfolder/header1.h
     project/subfolder/source2.cc
-    project/subfolder/header2.hh
     project/subfolder/source3.cpp
-    project/subfolder/header3.hpp
     project/subfolder/source4.cxx
-    project/subfolder/header4.hxx
-    project/subfolder/source4.c++
-    project/subfolder/header4.h++
+    project/subfolder/source5.c++
   )
 
 target_sources(my_project_lib
     PRIVATE
         # headers
-        project/header1.h
-        project/header2.hh
-        project/header3.hpp
-        project/header4.hxx
-        project/header4.h++
-        project/subfolder/header1.h
-        project/subfolder/header2.hh
-        project/subfolder/header3.hpp
-        project/subfolder/header4.hxx
-        project/subfolder/header4.h++)
+        project/header2.hh)
 
 add_library(my_weird_interface_lib INTERFACE)
 target_sources(my_weird_interface_lib
     INTERFACE
-        # headers, sources
-        project/header1.h
+        # sources
         project/source1.c
-        project/header2.hh
         project/source2.cc
-        project/header3.hpp
         project/source3.cpp
-        project/header4.hxx
         project/source4.cxx
-        project/header4.h++
-        project/source4.c++
-        project/subfolder/header1.h
+        project/source5.c++
         project/subfolder/source1.c
-        project/subfolder/header2.hh
         project/subfolder/source2.cc
-        project/subfolder/header3.hpp
         project/subfolder/source3.cpp
-        project/subfolder/header4.hxx
         project/subfolder/source4.cxx
-        project/subfolder/header4.h++
-        project/subfolder/source4.c++
+        project/subfolder/source5.c++
 )
+
+# sources
+# headers

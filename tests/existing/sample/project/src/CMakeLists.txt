@@ -18,7 +18,7 @@ add_library(my_project_lib
 )
 
 add_library(my_project_lib2
-    # sources, headers
+    # sources
     project/source1.c
     project/header1.h
   )
@@ -31,7 +31,7 @@ target_sources(my_project_lib
 add_library(my_weird_interface_lib INTERFACE)
 target_sources(my_weird_interface_lib
     INTERFACE
-        # headers, sources
+        # sources
         project/subfolder/header3.hpp
         project/subfolder/source3.cpp
 )

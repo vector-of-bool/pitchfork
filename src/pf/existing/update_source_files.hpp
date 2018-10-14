@@ -8,7 +8,6 @@
 namespace pf {
 
 void update_source_files(fs::path const&           project_root,
-                         std::set<fs::path> const& headers,
                          std::set<fs::path> const& sources);
 
 }  // namespace pf
