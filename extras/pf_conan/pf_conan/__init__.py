@@ -1,0 +1,1 @@
+from .cmake import CMakeConanFile

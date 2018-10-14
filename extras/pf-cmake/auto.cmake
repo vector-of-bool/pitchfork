@@ -2,7 +2,8 @@ include_guard(GLOBAL)
 
 include(CMakePackageConfigHelpers)
 
-function(pf_auto)
+# Real impl of `pf_auto()`
+function(_pf_auto)
     set(options
         NO_INSTALL
         )
@@ -190,8 +191,10 @@ function(pf_auto)
     # Add the tests subdirectory
     get_filename_component(tests_dir "${PROJECT_SOURCE_DIR}/tests" ABSOLUTE)
     option(BUILD_TESTING "Build the testing tree" ON)
+    set(_PF_ADDED_TESTS FALSE PARENT_SCOPE)
     if(EXISTS "${tests_dir}/CMakeLists.txt" AND BUILD_TESTING AND is_root_project AND NOT tests_dir IN_LIST already_subdirs)
         add_subdirectory("${tests_dir}")
+        set(_PF_ADDED_TESTS TRUE PARENT_SCOPE)
     endif()
 
     # Add the examples subdirectory
@@ -229,3 +232,12 @@ function(pf_auto)
             )
     endif()
 endfunction()
+
+# Macro so we can do things in the parent scope
+macro(pf_auto)
+    _pf_auto(${ARGN})
+    # Maybe call enable_testing() in the caller's scope (important)
+    if(_PF_ADDED_TESTS)
+        enable_testing()
+    endif()
+endmacro()
