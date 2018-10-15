@@ -1,7 +1,7 @@
 add_library(
     simple-cmake
-    simple/.hpp
-    simple/.cpp
+    simple/simple-cmake.hpp
+    simple/simple-cmake.cpp
     )
 add_library(simple::simple-cmake ALIAS simple-cmake)
 target_include_directories(simple-cmake
