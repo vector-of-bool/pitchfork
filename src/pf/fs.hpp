@@ -36,7 +36,7 @@ inline std::fstream open(const fs::path& filepath, std::ios::openmode mode) {
     if (ec) {
         throw std::system_error{ec, "Open file: " + filepath.string()};
     }
-    return std::move(ret);
+    return ret;
 }
 
 /**
