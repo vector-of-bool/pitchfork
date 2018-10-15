@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-list(INSERT CMAKE_MODULE_PATH 0 "${CMAKE_CURRENT_SOURCE_DIR}")
+list(INSERT CMAKE_MODULE_PATH 0 "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 project({{project_name}} VERSION 0.0.1 DESCRIPTION "A great new project")
 
