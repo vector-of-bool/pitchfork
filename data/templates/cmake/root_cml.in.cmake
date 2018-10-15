@@ -1,4 +1,4 @@
-CML(cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.10)
 
 list(INSERT CMAKE_MODULE_PATH 0 "${CMAKE_CURRENT_SOURCE_DIR}")
 
@@ -17,7 +17,7 @@ if(BUILD_TESTS AND (PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR))
     enable_testing()
     add_subdirectory(tests)
 endif()
-{{% /gen_tests %}}
+{{% /gen_tests }}
 
 {{ #gen_examples %}}
 option(BUILD_EXAMPLES "Build examples" ON)
