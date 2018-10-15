@@ -12,8 +12,8 @@ add_subdirectory(third_party)
 add_subdirectory(src)
 
 {{ #gen_tests %}}
-option(BUILD_TESTS "Build tests" ON)
-if(BUILD_TESTS AND (PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR))
+option(BUILD_TESTING "Build tests" ON)
+if(BUILD_TESTING AND (PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR))
     enable_testing()
     add_subdirectory(tests)
 endif()
