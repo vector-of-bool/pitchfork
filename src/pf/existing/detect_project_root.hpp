@@ -7,7 +7,7 @@
 
 namespace pf {
 
-boost::optional<fs::path> detect_project_root(fs::path cur_dir = fs::current_path());
+boost::optional<fs::path> detect_project_root(fs::path from_dir = fs::current_path());
 
 }  // namespace pf
 
