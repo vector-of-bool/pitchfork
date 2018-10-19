@@ -9,7 +9,8 @@
 
 namespace fs = pf::fs;
 
-void pf::update_source_files(fs::path const& project_root, std::set<fs::path> const& source_files) {
+void pf::update_source_files(fs::path const&              project_root,
+                             std::vector<fs::path> const& source_files) {
     fs::path const src_dir        = project_root / "src";
     fs::path const src_cmakelists = src_dir / "CMakeLists.txt";
 

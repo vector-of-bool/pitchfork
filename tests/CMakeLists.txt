@@ -39,6 +39,5 @@ pf_add_test_exe(generate generate.cpp)
 
 pf_add_test_exe(existing
     existing/detect_project_root.cpp
-    existing/glob_sources.cpp
     existing/update_source_files.cpp)
 configure_directory(existing/sample)
