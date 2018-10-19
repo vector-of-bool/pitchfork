@@ -49,7 +49,10 @@ if(NOT MSVC)
         add_compile_options(-Werror)
     endif()
 else()
-    add_compile_options(/permissive-)
+    add_compile_options(
+        /permissive-
+        /IGNORE:4221 # LNK4221 warns for empty cpp files. We use such files.
+        )
 endif()
 
 add_subdirectory(data)
