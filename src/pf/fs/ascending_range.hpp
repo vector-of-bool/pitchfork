@@ -1,8 +1,6 @@
 #ifndef PF_FS_ASCENDING_RANGE_HPP_INCLUDED
 #define PF_FS_ASCENDING_RANGE_HPP_INCLUDED
 
-#include <utility>
-
 #include <boost/range/iterator_range.hpp>
 
 #include <pf/fs/ascending_iterator.hpp>
@@ -10,9 +8,8 @@
 
 namespace pf {
 
-inline auto ascending_range(fs::path from, fs::path terminate = {}) {
-    return boost::make_iterator_range(ascending_iterator{std::move(from)},
-                                      ascending_iterator{std::move(terminate)});
+inline auto ascending_range(fs::path const& from, fs::path const& terminate = {}) {
+    return boost::make_iterator_range(ascending_iterator{from}, ascending_iterator{terminate});
 }
 
 }  // namespace pf

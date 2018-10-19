@@ -18,8 +18,9 @@ public:
 
     ascending_iterator() = default;
 
-    explicit ascending_iterator(fs::path p)
-        : current_{std::move(p)} {}
+    // Canonicalizing the path makes the `==` comparison valid
+    explicit ascending_iterator(fs::path const& p)
+        : current_{fs::weakly_canonical(p)} {}
 
     ascending_iterator& operator++() {
         current_ = current_.parent_path();
@@ -28,9 +29,7 @@ public:
 
     ascending_iterator operator++(int) {
         auto cpy = *this;
-
         ++*this;
-
         return cpy;
     }
 
