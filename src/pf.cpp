@@ -340,31 +340,38 @@ public:
         try {
             auto const            src_dir = _cli.get_base_dir() / "src";
             std::vector<fs::path> sources;
-            std::copy_if(fs::recursive_directory_iterator{src_dir},
-                         fs::recursive_directory_iterator{},
-                         std::back_inserter(sources),
-                         [&](fs::directory_entry const& entry) {
-                             struct path_hash {
-                                 auto operator()(fs::path const& path) const {
-                                     return fs::hash_value(path);  //
-                                 }
-                             };
 
-                             static std::unordered_set<fs::path, path_hash> SourceFileExtensions{
-                                 fs::path{".c"},
-                                 fs::path{".cc"},
-                                 fs::path{".cpp"},
-                                 fs::path{".cxx"},
-                                 fs::path{".c++"},
-                                 fs::path{".h"},
-                                 fs::path{".hh"},
-                                 fs::path{".hpp"},
-                                 fs::path{".hxx"},
-                                 fs::path{".h++"},
-                             };
-
-                             return SourceFileExtensions.count(entry.path().extension());
-                         });
+            struct path_hash {
+                auto operator()(fs::path const& path) const {
+                    return fs::hash_value(path);  //
+                }
+            };
+            std::unordered_set<fs::path, path_hash> const SourceFileExtensions{
+                fs::path{".c"},
+                fs::path{".cc"},
+                fs::path{".cpp"},
+                fs::path{".cxx"},
+                fs::path{".c++"},
+                fs::path{".h"},
+                fs::path{".hh"},
+                fs::path{".hpp"},
+                fs::path{".hxx"},
+                fs::path{".h++"},
+            };
+            std::for_each(fs::directory_iterator{src_dir},
+                          fs::directory_iterator{},
+                          [&](fs::directory_entry const& top_level_entry) {
+                              if (top_level_entry.is_directory()) {
+                                  std::copy_if(fs::recursive_directory_iterator{top_level_entry
+                                                                                    .path()},
+                                               fs::recursive_directory_iterator{},
+                                               std::back_inserter(sources),
+                                               [&](fs::directory_entry const& entry) {
+                                                   return SourceFileExtensions.count(
+                                                       entry.path().extension());
+                                               });
+                              }
+                          });
 
             pf::update_source_files(_cli.get_base_dir(), sources);
         } catch (const std::system_error& e) {
