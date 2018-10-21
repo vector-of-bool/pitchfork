@@ -2,6 +2,52 @@ include_guard(GLOBAL)
 
 include(CMakePackageConfigHelpers)
 
+function(_pf_auto_detect_enable_testing)
+    set(options
+        NO_INSTALL
+        )
+    set(args
+        LIBRARY_NAME
+        ALIAS
+        OUTPUT_NAME
+        VERSION_COMPATIBILITY
+        )
+    set(list_args
+        LINK
+        PRIVATE_LINK
+        EXE_LINK
+        SUBDIR_BEFORE
+        SUBDIR_AFTER
+        )
+    cmake_parse_arguments(PARSE_ARGV 0 ARG "${options}" "${args}" "${list_args}")
+
+    foreach(arg IN LISTS ARG_UNPARSED_ARGUMENTS)
+        message(WARNING "Unknown argument to pf_auto: ${arg}")
+    endforeach()
+
+    # Check that we were call correctly
+    # Must have called project():
+    if(NOT DEFINED PROJECT_NAME)
+        message(FATAL_ERROR "Please call project() before pf_auto()")
+    endif()
+
+    # Bool-ish for checking if we are the root project
+    get_directory_property(pr_pardir "${PROJECT_SOURCE_DIR}" DIRECTORY)
+    set(is_root_project TRUE)
+    if(pr_pardir)
+        set(is_root_project FALSE)
+    endif()
+
+    get_directory_property(already_subdirs SUBDIRECTORIES)
+    # Add the tests subdirectory
+    get_filename_component(tests_dir "${PROJECT_SOURCE_DIR}/tests" ABSOLUTE)
+    option(BUILD_TESTING "Build the testing tree" ON)
+    set(_PF_ADDED_TESTS FALSE PARENT_SCOPE)
+    if(EXISTS "${tests_dir}/CMakeLists.txt" AND BUILD_TESTING AND is_root_project AND NOT tests_dir IN_LIST already_subdirs)
+        set(_PF_ADDED_TESTS TRUE PARENT_SCOPE)
+    endif()
+endfunction()
+
 # Real impl of `pf_auto()`
 function(_pf_auto)
     set(options
@@ -235,9 +281,10 @@ endfunction()
 
 # Macro so we can do things in the parent scope
 macro(pf_auto)
-    _pf_auto(${ARGN})
+    _pf_auto_detect_enable_testing(${ARGN})
     # Maybe call enable_testing() in the caller's scope (important)
     if(_PF_ADDED_TESTS)
         enable_testing()
     endif()
+    _pf_auto(${ARGN})
 endmacro()
