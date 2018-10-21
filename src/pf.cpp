@@ -3,12 +3,15 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
+#include <pf/existing.hpp>
 #include <pf/fs.hpp>
 #include <pf/new.hpp>
 #include <pf/pitchfork.hpp>
 
+#include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <iterator>
 #include <unordered_map>
 
 namespace fs = pf::fs;
@@ -293,6 +296,77 @@ public:
     }
 };
 
+class cmd_update {
+private:
+    std::unordered_map<std::string, pf::build_system> _bs_map{
+        {"cmake", pf::build_system::cmake},
+    };
+
+    cli_common&    _cli;
+    args::Command  _cmd{_cli.cmd_group, "update", "Update sources for existing project"};
+    args::HelpFlag _help{_cmd, "help", "Print help for the `update` subcommand", {'h', "help"}};
+    args::MapPositional<std::string, pf::build_system>
+        _build_system{_cmd, "Build System", "The build system whose files to update", _bs_map};
+
+public:
+    explicit cmd_update(cli_common& gl)
+        : _cli{gl} {}
+
+    explicit operator bool() const { return !!_cmd; }
+
+    int run() {
+        auto bs = _build_system.Get();
+        if (bs == pf::build_system::unspecified) {
+            bs = get_map_value("Build system whose files to update", _bs_map, "cmake");
+        }
+
+        // TODO: fix this
+        if (bs != pf::build_system::cmake) {
+            _cli.console->error(
+                "CMake is the only supported build system for the `update` subcommand");
+        }
+
+        // Update existing source files
+        try {
+            auto const            src_dir = _cli.get_base_dir() / "src";
+            std::vector<fs::path> sources;
+            std::copy_if(fs::recursive_directory_iterator{src_dir},
+                         fs::recursive_directory_iterator{},
+                         std::back_inserter(sources),
+                         [&](fs::directory_entry const& entry) {
+                             struct path_hash {
+                                 auto operator()(fs::path const& path) const {
+                                     return fs::hash_value(path);  //
+                                 }
+                             };
+
+                             static std::unordered_set<fs::path, path_hash> SourceFileExtensions{
+                                 fs::path{".c"},
+                                 fs::path{".cc"},
+                                 fs::path{".cpp"},
+                                 fs::path{".cxx"},
+                                 fs::path{".c++"},
+                                 fs::path{".h"},
+                                 fs::path{".hh"},
+                                 fs::path{".hpp"},
+                                 fs::path{".hxx"},
+                                 fs::path{".h++"},
+                             };
+
+                             return SourceFileExtensions.count(entry.path().extension());
+                         });
+
+            pf::update_source_files(_cli.get_base_dir(), sources);
+        } catch (const std::system_error& e) {
+            _cli.console->error("Failed to update project in {}: {}",
+                                _cli.get_base_dir(),
+                                e.what());
+            return 1;
+        }
+        return 0;
+    }
+};
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -300,8 +374,9 @@ int main(int argc, char** argv) {
     cli_common           args{parser};
 
     // Subcommands
-    cmd_list list{args};
-    cmd_new  new_{args};
+    cmd_list   list{args};
+    cmd_new    new_{args};
+    cmd_update update{args};
 
     try {
         parser.ParseCLI(argc, argv);
@@ -318,6 +393,8 @@ int main(int argc, char** argv) {
             return list.run();
         } else if (new_) {
             return new_.run();
+        } else if (update) {
+            return update.run();
         } else {
             assert(false && "No subcommand selected?");
             std::terminate();

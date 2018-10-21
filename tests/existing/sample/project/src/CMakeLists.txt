@@ -33,8 +33,7 @@ target_sources(my_weird_interface_lib
     INTERFACE
         # sources
         project/subfolder/header3.hpp
-        project/subfolder/source3.cpp
-)
+        project/subfolder/source3.cpp)
 
 # sources
 # headers

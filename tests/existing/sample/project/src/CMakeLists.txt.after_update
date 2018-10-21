@@ -63,8 +63,7 @@ target_sources(my_weird_interface_lib
         project/subfolder/source2.cc
         project/subfolder/source3.cpp
         project/subfolder/source4.cxx
-        project/subfolder/source5.c++
-)
+        project/subfolder/source5.c++)
 
 # sources
 # headers

@@ -75,10 +75,10 @@ auto find_insertion_location(std::string::iterator                  insertion_co
     return std::next(insertion_comment, SourcesComment.size());
 }
 
-auto erase_existing_sources(std::string&                           cmakelists,
-                            std::string::iterator                  insertion_point,
-                            [[maybe_unused]] std::string::iterator begin_fn,
-                            [[maybe_unused]] std::string::iterator end_fn) {
+auto erase_existing_sources(std::string&          cmakelists,
+                            std::string::iterator insertion_point,
+                            std::string::iterator begin_fn,
+                            std::string::iterator end_fn) {
     // We don't delete until the end of the ')', but until the last source-list character,
     // meaning:
     // ...
@@ -88,13 +88,19 @@ auto erase_existing_sources(std::string&                           cmakelists,
     // ... Gets turned into:
     // # sources
     //  )
-    auto last_source_list_char
-        = std::next(std::find_if(std::make_reverse_iterator(end_fn),
-                                 std::make_reverse_iterator(insertion_point),
-                                 [](char c) { return c == '\n' || !std::isspace(c); }))
-              .base();
+    auto last_source_list_char = std::find_if_not(std::make_reverse_iterator(end_fn),
+                                                  std::make_reverse_iterator(begin_fn),
+                                                  [](char c) { return std::isblank(c); });
+    if (*last_source_list_char == '\n') {
+        ++last_source_list_char;
+    }
 
-    return cmakelists.erase(insertion_point, last_source_list_char);
+    if (last_source_list_char.base() <= insertion_point) {
+        // If the source list is empty, we need to ensure there's a newline separating it
+        // from the rest
+        return cmakelists.insert(insertion_point, '\n');
+    }
+    return cmakelists.erase(insertion_point, last_source_list_char.base());
 }
 
 auto insert_sources(std::string&                    cmakelists,
@@ -176,8 +182,10 @@ void pf::update_source_files(fs::path const&              project_root,
                 = ::write_sources(cmakelists, source_strings, insertion_comment, begin_fn, end_fn);
         }
 
-        std::ofstream cmakelists_out{src_cmakelists, std::ios::trunc};
-        cmakelists_out << cmakelists;
+        if (cmakelists != cmakelists_cpy) {
+            std::ofstream cmakelists_out{src_cmakelists, std::ios::trunc};
+            cmakelists_out << cmakelists;
+        }
     } else {
         spdlog::get("console")->warn("No CMakeLists.txt found at: {}", src_cmakelists);
     }
