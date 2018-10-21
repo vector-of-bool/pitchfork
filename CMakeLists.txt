@@ -61,8 +61,6 @@ include(Pitchfork)
 file(GLOB_RECURSE pf_cmake_files CONFIGURE_DEPENDS extras/pf-cmake/*)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${pf_cmake_files})
 
-enable_testing()
-
 pf_auto(
     OUTPUT_NAME pf
     ALIAS pf::pitchfork
