@@ -4,11 +4,15 @@
 #include <cassert>
 #include <fstream>
 #include <iterator>
+#include <string_view>
 
 using namespace pf;
 using namespace pf::test;
 
 namespace {
+
+// Filename to ignore in diffs. Allows us to have "empty" directories in git
+constexpr std::string_view IgnoreDiff = "ignore_in_diff";
 
 using path_set = std::set<fs::path>;
 using dir_iter = pf::fs::directory_iterator;
@@ -24,6 +28,9 @@ path_set children(fs::path basis, fs::path path) {
         throw std::system_error{ec, "Cannot get children of non-directory file: " + path.string()};
     }
     for (fs::path child : iter) {
+        if (child.stem().string() == IgnoreDiff) {
+            continue;
+        }
         // Hack to get relative path without using fs::relative()
         auto relpath = fs::path{child.string().substr(basis.string().length())}.relative_path();
         ret.insert(relpath);
