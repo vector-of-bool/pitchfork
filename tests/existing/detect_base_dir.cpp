@@ -1,6 +1,4 @@
-#include <pf/existing/detect_project_root.hpp>
-
-#include <boost/optional/optional_io.hpp>
+#include <pf/existing/detect_base_dir.hpp>
 
 #include <catch2/catch.hpp>
 
@@ -21,7 +19,7 @@ TEST_CASE("detect project root") {
 
     for (auto const& working_dir : cases) {
         DYNAMIC_SECTION(working_dir) {
-            CHECK(pf::detect_project_root(fs::path{PF_TEST_BINDIR} / working_dir) == expected);
+            CHECK(pf::detect_base_dir(fs::path{PF_TEST_BINDIR} / working_dir) == expected);
         }
     }
 }
@@ -29,5 +27,5 @@ TEST_CASE("detect project root") {
 TEST_CASE("no project root") {
     fs::path path;
 
-    CHECK(pf::detect_project_root(path) == boost::none);
+    CHECK(pf::detect_base_dir(path) == std::nullopt);
 }

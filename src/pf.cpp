@@ -36,7 +36,14 @@ std::string get_input_line() {
 
 fs::path base_dir_env() {
     auto ptr = std::getenv("PF_BASE_DIR");
-    return ptr ? ptr : fs::current_path();
+    if (ptr) {
+        return ptr;
+    }
+
+    // Attempt to detect the base directory
+    return pf::detect_base_dir()
+        // Just use the cwd if cannot detect base dir
+        .value_or(fs::current_path());
 }
 
 struct cli_common {
@@ -298,15 +305,17 @@ public:
 
 class cmd_update {
 private:
-    std::unordered_map<std::string, pf::build_system> _bs_map{
-        {"cmake", pf::build_system::cmake},
-    };
-
     cli_common&    _cli;
     args::Command  _cmd{_cli.cmd_group, "update", "Update sources for existing project"};
     args::HelpFlag _help{_cmd, "help", "Print help for the `update` subcommand", {'h', "help"}};
-    args::MapPositional<std::string, pf::build_system>
-        _build_system{_cmd, "Build System", "The build system whose files to update", _bs_map};
+    std::unordered_map<std::string, pf::build_system> _bs_map{
+        {"cmake", pf::build_system::cmake},
+    };
+    args::MapFlag<std::string, pf::build_system> _build_system{_cmd,
+                                                               "build-system",
+                                                               "The build system to generate",
+                                                               {'b', "build-system"},
+                                                               _bs_map};
 
 public:
     explicit cmd_update(cli_common& gl)
@@ -320,10 +329,11 @@ public:
             bs = get_map_value("Build system whose files to update", _bs_map, "cmake");
         }
 
-        // TODO: fix this
+        // Only CMake supported at this time
         if (bs != pf::build_system::cmake) {
             _cli.console->error(
                 "CMake is the only supported build system for the `update` subcommand");
+            return 1;
         }
 
         // Update existing source files

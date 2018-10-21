@@ -45,7 +45,7 @@ public:
     }
 
 private:
-    fs::path current_ = {};
+    fs::path current_ = {"/"};
 };
 
 }  // namespace pf

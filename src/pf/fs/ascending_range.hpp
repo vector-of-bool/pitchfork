@@ -8,7 +8,7 @@
 
 namespace pf {
 
-inline auto ascending_range(fs::path const& from, fs::path const& terminate = {}) {
+inline auto ascending_range(fs::path const& from, fs::path const& terminate = {"/"}) {
     return boost::make_iterator_range(ascending_iterator{from}, ascending_iterator{terminate});
 }
 

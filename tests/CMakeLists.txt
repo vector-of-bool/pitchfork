@@ -38,6 +38,6 @@ endfunction()
 pf_add_test_exe(generate generate.cpp)
 
 pf_add_test_exe(existing
-    existing/detect_project_root.cpp
+    existing/detect_base_dir.cpp
     existing/update_source_files.cpp)
 configure_directory(existing/sample)
