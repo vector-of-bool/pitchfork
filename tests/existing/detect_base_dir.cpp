@@ -25,7 +25,9 @@ TEST_CASE("detect project root") {
 }
 
 TEST_CASE("no project root") {
-    fs::path path;
-
-    CHECK(pf::detect_base_dir(path) == std::nullopt);
+    auto path = fs::current_path().root_directory();
+    INFO("Base directory:");
+    INFO(path);
+    auto basedir = pf::detect_base_dir(path);
+    CHECK(basedir == std::nullopt);
 }
