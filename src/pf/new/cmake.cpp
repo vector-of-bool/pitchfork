@@ -24,6 +24,7 @@ void pf::create_cmake_files(const pf::new_project_params& params) {
     trr.set("gen_third_party", params.create_third_party);
     trr.set("gen_tests", params.create_tests);
     trr.set("separate_headers", params.separate_headers);
+    trr.set("first_stem", params.first_file_stem);
 
     trr.render_to_file("cmake/src_cml.in.cmake", "src/CMakeLists.txt");
     trr.render_to_file("cmake/root_cml.in.cmake", "CMakeLists.txt");

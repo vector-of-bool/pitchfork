@@ -44,3 +44,9 @@ TEST_CASE("simple_project") {
     auto params = make_project_params("simple", "simple");
     generate_and_compare(params, "simple");
 }
+
+TEST_CASE("Simple project with CMake") {
+    auto params = make_project_params("simple-cmake", "simple");
+    params.build_system = pf::build_system::cmake;
+    generate_and_compare(params, "simple-cmake");
+}
