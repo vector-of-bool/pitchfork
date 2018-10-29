@@ -1,26 +1,13 @@
 #ifndef PF_FS_CORE_HPP_INCLUDED
 #define PF_FS_CORE_HPP_INCLUDED
 
+#include <filesystem>
 #include <fstream>
 #include <system_error>
 
-#if STD_FS_IS_EXPERIMENTAL
-#include <boost/filesystem.hpp>
-namespace pf {
-
-namespace fs = boost::filesystem;
-
-}  // namespace pf
-#else
-#include <filesystem>
 namespace pf {
 
 namespace fs = std::filesystem;
-
-}  // namespace pf
-#endif
-
-namespace pf {
 
 /**
  * Open the given filepath with the given openmode. Fills out `ec` with an error code in case of

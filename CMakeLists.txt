@@ -33,10 +33,14 @@ pmm(CONAN SETTINGS ${conan_std})
 conan_set_find_paths()
 
 # Find-package the Boost that Conan gave us
-find_package(Boost 1.68.0 REQUIRED COMPONENTS filesystem)
+find_package(Boost 1.68.0 REQUIRED)
 
 # Other deps not controlled by Conan
 find_package(Filesystem REQUIRED)
+if(NOT HAVE_STD_FILESYSTEM)
+    message(SEND_ERROR "Pitchfork only builds with C++17 std::filesystem, not std::experimental::filesystem.")
+endif()
+
 if(BUILD_SPEC)
     find_package(Bikeshed)
 endif()
@@ -69,7 +73,6 @@ pf_auto(
         Boost::boost
         CONAN_PKG::spdlog
     PRIVATE_LINK
-        Boost::filesystem
         kainjow::mustache
         pf::templates
     EXE_LINK
