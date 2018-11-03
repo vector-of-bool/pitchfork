@@ -152,41 +152,39 @@ void pf::update_source_files(fs::path const&              project_root,
     fs::path const src_dir        = project_root / "src";
     fs::path const src_cmakelists = src_dir / "CMakeLists.txt";
 
-    if (fs::exists(src_cmakelists)) {
-        std::vector<std::string> const source_strings
-            = ::relative_source_strings(source_files, src_dir);
+    if (!fs::exists(src_cmakelists)) {
+        throw std::system_error{
+            std::make_error_code(std::errc::no_such_file_or_directory),
+            src_cmakelists.string() + " does not exist",
+        };
+    }
 
-        std::string cmakelists = [&] {
-            std::ostringstream out;
-            out << std::ifstream{src_cmakelists}.rdbuf();
+    std::string cmakelists = pf::slurp_file(src_cmakelists);
 
-            return out.str();
-        }();
+    std::vector<std::string> const source_strings
+        = ::relative_source_strings(source_files, src_dir);
 
-        std::string const cmakelists_cpy = cmakelists;
+    std::string const cmakelists_cpy = cmakelists;
 
-        auto begin = cmakelists.begin();
-        auto end   = cmakelists.end();
+    auto begin = cmakelists.begin();
+    auto end   = cmakelists.end();
 
-        while (begin != end) {
-            auto const begin_fn          = ::find_next_function(begin, end);
-            auto const end_fn            = ::find_end_function(begin_fn, end);
-            auto const insertion_comment = ::find_insertion_indicator_comment(begin_fn, end_fn);
+    while (begin != end) {
+        auto const begin_fn          = ::find_next_function(begin, end);
+        auto const end_fn            = ::find_end_function(begin_fn, end);
+        auto const insertion_comment = ::find_insertion_indicator_comment(begin_fn, end_fn);
 
-            if (insertion_comment == end_fn) {
-                begin = end_fn;
-                continue;
-            }
-
-            std::tie(begin, end)
-                = ::write_sources(cmakelists, source_strings, insertion_comment, begin_fn, end_fn);
+        if (insertion_comment == end_fn) {
+            begin = end_fn;
+            continue;
         }
 
-        if (cmakelists != cmakelists_cpy) {
-            std::ofstream cmakelists_out{src_cmakelists, std::ios::trunc};
-            cmakelists_out << cmakelists;
-        }
-    } else {
-        spdlog::get("console")->warn("No CMakeLists.txt found at: {}", src_cmakelists);
+        std::tie(begin, end)
+            = ::write_sources(cmakelists, source_strings, insertion_comment, begin_fn, end_fn);
+    }
+
+    if (cmakelists != cmakelists_cpy) {
+        std::fstream cmakelists_out = pf::open(src_cmakelists, std::ios::trunc | std::ios::out);
+        cmakelists_out << cmakelists;
     }
 }
