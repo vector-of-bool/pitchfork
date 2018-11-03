@@ -12,5 +12,5 @@ std::fstream pf::open(const fs::path& filepath, std::ios::openmode mode, std::er
     } catch (const std::ios::failure& e) {
         ec = e.code();
     }
-    return std::move(ret);
+    return ret;
 }
