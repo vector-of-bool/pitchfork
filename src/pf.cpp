@@ -372,6 +372,7 @@ public:
                                                });
                               }
                           });
+            std::sort(sources.begin(), sources.end());
 
             pf::update_source_files(_cli.get_base_dir(), sources);
         } catch (const std::system_error& e) {
