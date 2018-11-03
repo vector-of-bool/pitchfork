@@ -313,7 +313,7 @@ private:
     };
     args::MapFlag<std::string, pf::build_system> _build_system{_cmd,
                                                                "build-system",
-                                                               "The build system to generate",
+                                                               "The build system to update",
                                                                {'b', "build-system"},
                                                                _bs_map};
 
