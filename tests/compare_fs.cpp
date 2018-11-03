@@ -24,9 +24,7 @@ path_set children(fs::path basis, fs::path path) {
         throw std::system_error{ec, "Cannot get children of non-directory file: " + path.string()};
     }
     for (fs::path child : iter) {
-        // Hack to get relative path without using fs::relative()
-        auto relpath = fs::path{child.string().substr(basis.string().length())}.relative_path();
-        ret.insert(relpath);
+        ret.insert(fs::relative(child, basis));
     }
     return ret;
 }
