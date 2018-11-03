@@ -22,7 +22,7 @@ TEST_CASE("update source files") {
          "/existing/sample/project/src/CMakeLists.txt");
 
     pf::update_source_files(
-        fs::path{PF_TEST_BINDIR "/existing/sample/project"},
+        fs::path{PF_TEST_BINDIR "/existing/sample/project/src/CMakeLists.txt"},
         {
             fs::path{PF_TEST_BINDIR "/existing/sample/project/src/project/source1.c"},
             fs::path{PF_TEST_BINDIR "/existing/sample/project/src/project/source2.cc"},

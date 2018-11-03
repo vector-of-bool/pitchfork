@@ -338,43 +338,17 @@ public:
 
         // Update existing source files
         try {
-            auto const            src_dir = _cli.get_base_dir() / "src";
-            std::vector<fs::path> sources;
+            auto const base_dir = _cli.get_base_dir();
 
-            struct path_hash {
-                auto operator()(fs::path const& path) const {
-                    return fs::hash_value(path);  //
-                }
-            };
-            std::unordered_set<fs::path, path_hash> const SourceFileExtensions{
-                fs::path{".c"},
-                fs::path{".cc"},
-                fs::path{".cpp"},
-                fs::path{".cxx"},
-                fs::path{".c++"},
-                fs::path{".h"},
-                fs::path{".hh"},
-                fs::path{".hpp"},
-                fs::path{".hxx"},
-                fs::path{".h++"},
-            };
-            std::for_each(fs::directory_iterator{src_dir},
-                          fs::directory_iterator{},
-                          [&](fs::directory_entry const& top_level_entry) {
-                              if (top_level_entry.is_directory()) {
-                                  std::copy_if(fs::recursive_directory_iterator{top_level_entry
-                                                                                    .path()},
-                                               fs::recursive_directory_iterator{},
-                                               std::back_inserter(sources),
-                                               [&](fs::directory_entry const& entry) {
-                                                   return SourceFileExtensions.count(
-                                                       entry.path().extension());
-                                               });
-                              }
-                          });
-            std::sort(sources.begin(), sources.end());
+            auto const            src_dir = base_dir / "src";
+            std::vector<fs::path> sources = pf::glob_sources(src_dir);
+            pf::update_source_files(src_dir / "CMakeLists.txt", sources);
 
-            pf::update_source_files(_cli.get_base_dir(), sources);
+            auto const tests_dir = base_dir / "tests";
+            if (fs::exists(tests_dir)) {
+                std::vector<fs::path> test_sources = pf::glob_sources(tests_dir);
+                pf::update_source_files(tests_dir / "CMakeLists.txt", test_sources);
+            }
         } catch (const std::system_error& e) {
             _cli.console->error("Failed to update project in {}: {}",
                                 _cli.get_base_dir(),

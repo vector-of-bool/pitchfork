@@ -16,15 +16,15 @@ namespace fs = pf::fs;
 namespace {
 
 std::vector<std::string> relative_source_strings(std::vector<fs::path> const& source_files,
-                                                 fs::path const&              src_dir) {
+                                                 fs::path const&              base_dir) {
     std::vector<std::string> source_strings;
     source_strings.reserve(source_files.size());
 
     std::transform(source_files.begin(),
                    source_files.end(),
                    std::back_inserter(source_strings),
-                   [&src_dir](auto const& path) {
-                       auto result = fs::relative(path, src_dir).string();
+                   [&base_dir](auto const& path) {
+                       auto result = fs::relative(path, base_dir).string();
                        // TODO: evaluate if replacing `\` in filenames might cause a problem
                        std::replace(result.begin(), result.end(), '\\', '/');
 
@@ -147,22 +147,19 @@ write_sources(std::string&                    cmakelists,
 
 }  // namespace
 
-void pf::update_source_files(fs::path const&              project_root,
+void pf::update_source_files(fs::path const&              cmakelists_file,
                              std::vector<fs::path> const& source_files) {
-    fs::path const src_dir        = project_root / "src";
-    fs::path const src_cmakelists = src_dir / "CMakeLists.txt";
-
-    if (!fs::exists(src_cmakelists)) {
+    if (!fs::exists(cmakelists_file)) {
         throw std::system_error{
             std::make_error_code(std::errc::no_such_file_or_directory),
-            src_cmakelists.string() + " does not exist",
+            cmakelists_file.string() + " does not exist",
         };
     }
 
-    std::string cmakelists = pf::slurp_file(src_cmakelists);
+    std::string cmakelists = pf::slurp_file(cmakelists_file);
 
     std::vector<std::string> const source_strings
-        = ::relative_source_strings(source_files, src_dir);
+        = ::relative_source_strings(source_files, cmakelists_file.parent_path());
 
     std::string const cmakelists_cpy = cmakelists;
 
@@ -184,7 +181,7 @@ void pf::update_source_files(fs::path const&              project_root,
     }
 
     if (cmakelists != cmakelists_cpy) {
-        std::fstream cmakelists_out = pf::open(src_cmakelists, std::ios::trunc | std::ios::out);
+        std::fstream cmakelists_out = pf::open(cmakelists_file, std::ios::trunc | std::ios::out);
         cmakelists_out << cmakelists;
     }
 }

@@ -7,7 +7,7 @@
 
 namespace pf {
 
-void update_source_files(fs::path const& project_root, std::vector<fs::path> const& sources);
+void update_source_files(fs::path const& cmakelists_file, std::vector<fs::path> const& sources);
 
 }  // namespace pf
 
