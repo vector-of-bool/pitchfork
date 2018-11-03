@@ -34,7 +34,7 @@ std::string get_input_line() {
     return ret;
 }
 
-fs::path base_dir_env() {
+fs::path default_base_dir() {
     auto ptr = std::getenv("PF_BASE_DIR");
     if (ptr) {
         return ptr;
@@ -56,7 +56,7 @@ struct cli_common {
                            "base_dir",
                            "The base directory for projects\n[env: PF_BASE_DIR]",
                            {'B', "base-dir"},
-                           base_dir_env()};
+                           default_base_dir()};
 
     args::Group cmd_group{parser, "Available Commands"};
 
