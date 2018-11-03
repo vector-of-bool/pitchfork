@@ -3,6 +3,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <string>
 #include <system_error>
 
 namespace pf {
@@ -50,6 +51,20 @@ void write_file(const fs::path& path, What&& w) {
     if (ec) {
         throw std::system_error{ec, "Failed to write file: " + path.string()};
     }
+}
+
+/**
+ * Slurp the entire contents of a file into a std::string.
+ */
+std::string slurp_file(const fs::path& path, std::error_code& ec);
+
+inline std::string slurp_file(const fs::path& path) {
+    std::error_code ec;
+    auto            contents = pf::slurp_file(path, ec);
+    if (ec) {
+        throw std::system_error{ec, "Reading file: " + path.string()};
+    }
+    return contents;
 }
 }  // namespace pf
 
