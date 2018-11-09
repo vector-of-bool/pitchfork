@@ -8,14 +8,28 @@ project(pitchfork
     DESCRIPTION "Libraries and programs for working with Pitchfork Layout projects"
     )
 
+option(PF_FORCE_TESTS_COLOR "Force colored output in tests" OFF)
+
 if(NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
 endif()
 
 option(BUILD_SPEC "Build the Pitchfork document" ON)
 
+if(NOT CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 17 CACHE STRING "")
+endif()
+
+if(CMAKE_CXX_STANDARD LESS 17)
+    message(WARNING "Incompatible C++ standard ${CMAKE_CXX_STANDARD}. Pitchfork requires C++17")
+endif()
+
+if(CMAKE_CXX_STANDARD)
+    set(conan_std cppstd=${CMAKE_CXX_STANDARD})
+endif()
+
 include(pmm.cmake)
-pmm(CONAN)
+pmm(CONAN SETTINGS ${conan_std})
 conan_set_find_paths()
 
 # Find-package the Boost that Conan gave us
@@ -23,6 +37,10 @@ find_package(Boost 1.68.0 REQUIRED)
 
 # Other deps not controlled by Conan
 find_package(Filesystem REQUIRED)
+if(NOT HAVE_STD_FILESYSTEM)
+    message(SEND_ERROR "Pitchfork only builds with C++17 std::filesystem, not std::experimental::filesystem.")
+endif()
+
 if(BUILD_SPEC)
     find_package(Bikeshed)
 endif()
@@ -36,6 +54,8 @@ if(NOT MSVC)
     endif()
 else()
     add_compile_options(/permissive-)
+    # We want to pass this flag to link.exe. In CMake 3.13, we can use add_link_options
+    # /IGNORE:4221 # LNK4221 warns for empty cpp files. We use such files.
 endif()
 
 add_subdirectory(data)
@@ -44,7 +64,6 @@ set(PF_URL "file://${PROJECT_SOURCE_DIR}/extras/pf-cmake" CACHE INTERNAL "")
 include(Pitchfork)
 file(GLOB_RECURSE pf_cmake_files CONFIGURE_DEPENDS extras/pf-cmake/*)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${pf_cmake_files})
-
 
 pf_auto(
     OUTPUT_NAME pf

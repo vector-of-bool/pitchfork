@@ -31,9 +31,7 @@ path_set children(fs::path basis, fs::path path) {
         if (child.stem().string() == IgnoreDiff) {
             continue;
         }
-        // Hack to get relative path without using fs::relative()
-        auto relpath = fs::path{child.string().substr(basis.string().length())}.relative_path();
-        ret.insert(relpath);
+        ret.insert(fs::relative(child, basis));
     }
     return ret;
 }

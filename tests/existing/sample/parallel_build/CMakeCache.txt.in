@@ -1,0 +1,3 @@
+//Source directory with the top level CMakeLists.txt file for this
+// project
+CMAKE_HOME_DIRECTORY:INTERNAL=${PF_TEST_BINDIR}/existing/sample/project

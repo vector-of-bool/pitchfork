@@ -1,0 +1,69 @@
+set(sources
+    # sources
+    project/source1.c
+    project/source2.cc
+    project/source3.cpp
+    project/source4.cxx
+    project/source5.c++
+    project/subfolder/source1.c
+    project/subfolder/source2.cc
+    project/subfolder/source3.cpp
+    project/subfolder/source4.cxx
+    project/subfolder/source5.c++
+    )
+
+set(headers
+    # headers
+    project/header1.h
+    project/subfolder/header4.hxx)
+
+add_library(my_project_lib
+    # sources
+    project/source1.c
+    project/source2.cc
+    project/source3.cpp
+    project/source4.cxx
+    project/source5.c++
+    project/subfolder/source1.c
+    project/subfolder/source2.cc
+    project/subfolder/source3.cpp
+    project/subfolder/source4.cxx
+    project/subfolder/source5.c++
+)
+
+add_library(my_project_lib2
+    # sources
+    project/source1.c
+    project/source2.cc
+    project/source3.cpp
+    project/source4.cxx
+    project/source5.c++
+    project/subfolder/source1.c
+    project/subfolder/source2.cc
+    project/subfolder/source3.cpp
+    project/subfolder/source4.cxx
+    project/subfolder/source5.c++
+  )
+
+target_sources(my_project_lib
+    PRIVATE
+        # headers
+        project/header2.hh)
+
+add_library(my_weird_interface_lib INTERFACE)
+target_sources(my_weird_interface_lib
+    INTERFACE
+        # sources
+        project/source1.c
+        project/source2.cc
+        project/source3.cpp
+        project/source4.cxx
+        project/source5.c++
+        project/subfolder/source1.c
+        project/subfolder/source2.cc
+        project/subfolder/source3.cpp
+        project/subfolder/source4.cxx
+        project/subfolder/source5.c++)
+
+# sources
+# headers

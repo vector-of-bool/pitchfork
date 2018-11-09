@@ -3,12 +3,15 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
+#include <pf/existing.hpp>
 #include <pf/fs.hpp>
 #include <pf/new.hpp>
 #include <pf/pitchfork.hpp>
 
+#include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <iterator>
 #include <unordered_map>
 
 namespace fs = pf::fs;
@@ -31,9 +34,16 @@ std::string get_input_line() {
     return ret;
 }
 
-fs::path base_dir_env() {
+fs::path default_base_dir() {
     auto ptr = std::getenv("PF_BASE_DIR");
-    return ptr ? ptr : fs::current_path();
+    if (ptr) {
+        return ptr;
+    }
+
+    // Attempt to detect the base directory
+    return pf::detect_base_dir()
+        // Just use the cwd if cannot detect base dir
+        .value_or(fs::current_path());
 }
 
 struct cli_common {
@@ -46,7 +56,7 @@ struct cli_common {
                            "base_dir",
                            "The base directory for projects\n[env: PF_BASE_DIR]",
                            {'B', "base-dir"},
-                           base_dir_env()};
+                           default_base_dir()};
 
     args::Group cmd_group{parser, "Available Commands"};
 
@@ -293,6 +303,62 @@ public:
     }
 };
 
+class cmd_update {
+private:
+    cli_common&    _cli;
+    args::Command  _cmd{_cli.cmd_group, "update", "Update sources for existing project"};
+    args::HelpFlag _help{_cmd, "help", "Print help for the `update` subcommand", {'h', "help"}};
+    std::unordered_map<std::string, pf::build_system> _bs_map{
+        {"cmake", pf::build_system::cmake},
+    };
+    args::MapFlag<std::string, pf::build_system> _build_system{_cmd,
+                                                               "build-system",
+                                                               "The build system to update",
+                                                               {'b', "build-system"},
+                                                               _bs_map};
+
+public:
+    explicit cmd_update(cli_common& gl)
+        : _cli{gl} {}
+
+    explicit operator bool() const { return !!_cmd; }
+
+    int run() {
+        auto bs = _build_system.Get();
+        if (bs == pf::build_system::unspecified) {
+            bs = get_map_value("Build system whose files to update", _bs_map, "cmake");
+        }
+
+        // Only CMake supported at this time
+        if (bs != pf::build_system::cmake) {
+            _cli.console->error(
+                "CMake is the only supported build system for the `update` subcommand");
+            return 1;
+        }
+
+        // Update existing source files
+        try {
+            auto const base_dir = _cli.get_base_dir();
+
+            auto const            src_dir = base_dir / "src";
+            std::vector<fs::path> sources = pf::glob_sources(src_dir);
+            pf::update_source_files(src_dir / "CMakeLists.txt", sources);
+
+            auto const tests_dir = base_dir / "tests";
+            if (fs::exists(tests_dir)) {
+                std::vector<fs::path> test_sources = pf::glob_sources(tests_dir);
+                pf::update_source_files(tests_dir / "CMakeLists.txt", test_sources);
+            }
+        } catch (const std::system_error& e) {
+            _cli.console->error("Failed to update project in {}: {}",
+                                _cli.get_base_dir(),
+                                e.what());
+            return 1;
+        }
+        return 0;
+    }
+};
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -300,8 +366,9 @@ int main(int argc, char** argv) {
     cli_common           args{parser};
 
     // Subcommands
-    cmd_list list{args};
-    cmd_new  new_{args};
+    cmd_list   list{args};
+    cmd_new    new_{args};
+    cmd_update update{args};
 
     try {
         parser.ParseCLI(argc, argv);
@@ -318,6 +385,8 @@ int main(int argc, char** argv) {
             return list.run();
         } else if (new_) {
             return new_.run();
+        } else if (update) {
+            return update.run();
         } else {
             assert(false && "No subcommand selected?");
             std::terminate();
