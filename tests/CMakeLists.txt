@@ -1,4 +1,4 @@
-find_package(Catch2 2.3.0 REQUIRED)
+find_package(Catch2 2.5.0 REQUIRED)
 include(Catch)
 
 set(PF_TEST_BINDIR "${CMAKE_CURRENT_BINARY_DIR}")

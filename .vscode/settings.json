@@ -1,6 +1,7 @@
 {
     "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools",
     "files.associations": {
+        "*.cmake.in": "cmake",
         "*.lix": "elixir",
         "array": "cpp",
         "string_view": "cpp",
@@ -53,6 +54,8 @@
         "condition_variable": "cpp",
         "new": "cpp",
         "thread": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "xutility": "cpp",
+        "xlocale": "cpp"
     }
 }

@@ -75,6 +75,7 @@ pf_auto(
     PRIVATE_LINK
         kainjow::mustache
         pf::templates
+        range-v3
     EXE_LINK
         taywee::args
     )

@@ -7,7 +7,15 @@
 
 namespace pf {
 
-void update_source_files(fs::path const& cmakelists_file, std::vector<fs::path> const& sources);
+enum class update_grouping {
+    unspecified,
+    none,
+    smart,
+};
+
+void update_source_files(fs::path const&              cmakelists_file,
+                         std::vector<fs::path> const& sources,
+                         update_grouping              grouping = update_grouping::smart);
 
 }  // namespace pf
 
