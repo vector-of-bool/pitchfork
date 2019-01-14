@@ -359,6 +359,48 @@ public:
     }
 };
 
+class cmd_query {
+private:
+    cli_common&    _cli;
+    args::Command  _cmd{_cli.cmd_group, "query", "Query the project"};
+    args::HelpFlag _help{_cmd, "help", "Print help for the `query` subcommand", {'h', "help"}};
+    args::Positional<std::string> _id{
+        _cmd,
+        "id",
+        "Obtain this information. Valid values:\n"
+        "* project.root",
+    };
+
+public:
+    explicit cmd_query(cli_common& gl)
+        : _cli{gl} {}
+
+    explicit operator bool() const { return !!_cmd; }
+
+    int run() {
+        static std::unordered_map<std::string, std::function<int(cmd_query const&)>> queries{
+            {"project.root",
+             [](cmd_query const& cmd) {
+                 std::cout << cmd._cli.get_base_dir().string() << '\n';
+                 return 0;
+             }},
+        };
+
+        auto const id = _id.Get();
+
+        auto query = queries.find(id);
+        if (query == queries.end()) {
+            _cli.console->error(
+                "Invalid id `{}`. Valid values:\n"
+                "* project.root",
+                id);
+            return 1;
+        }
+
+        return query->second(*this);
+    }
+};
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -369,6 +411,7 @@ int main(int argc, char** argv) {
     cmd_list   list{args};
     cmd_new    new_{args};
     cmd_update update{args};
+    cmd_query  query{args};
 
     try {
         parser.ParseCLI(argc, argv);
@@ -387,6 +430,8 @@ int main(int argc, char** argv) {
             return new_.run();
         } else if (update) {
             return update.run();
+        } else if (query) {
+            return query.run();
         } else {
             assert(false && "No subcommand selected?");
             std::terminate();
