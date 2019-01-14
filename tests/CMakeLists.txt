@@ -35,9 +35,30 @@ function(pf_add_test_exe name)
         EXTRA_ARGS $<$<BOOL:${PF_FORCE_TESTS_COLOR}>:--use-colour=yes>)
 endfunction()
 
+function(pf_add_query_test ID)
+    set(options)
+    set(list_args PASS_REGULAR_EXPRESSION FAIL_REGULAR_EXPRESSION)
+
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "${options}" "${args}" "${list_args}")
+
+    add_test(
+        NAME "query:${ID}"
+        COMMAND pf query "${ID}"
+    )
+    set_tests_properties("query:${ID}"
+        PROPERTIES
+            PASS_REGULAR_EXPRESSION "${ARG_PASS_REGULAR_EXPRESSION}"
+            FAIL_REGULAR_EXPRESSION "${ARG_FAIL_REGULAR_EXPRESSION}"
+    )
+endfunction()
+
 pf_add_test_exe(generate generate.cpp)
 
 pf_add_test_exe(existing
     existing/detect_base_dir.cpp
     existing/update_source_files.cpp)
 configure_directory(existing/sample)
+
+pf_add_query_test(project.root
+    PASS_REGULAR_EXPRESSION "${PROJECT_SOURCE_DIR}"
+)
