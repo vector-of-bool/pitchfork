@@ -7,6 +7,7 @@ set(sources
     project/source5.c++
 
     project/sub2/source1.c
+
     project/sub3/source1.c
 
     project/subfolder/source1.c
@@ -30,6 +31,7 @@ add_library(my_project_lib
     project/source5.c++
 
     project/sub2/source1.c
+
     project/sub3/source1.c
 
     project/subfolder/source1.c
@@ -48,6 +50,7 @@ add_library(my_project_lib2
     project/source5.c++
 
     project/sub2/source1.c
+
     project/sub3/source1.c
 
     project/subfolder/source1.c
@@ -73,6 +76,7 @@ target_sources(my_weird_interface_lib
         project/source5.c++
 
         project/sub2/source1.c
+
         project/sub3/source1.c
 
         project/subfolder/source1.c

@@ -46,7 +46,12 @@ std::vector<std::string> relative_source_strings(std::vector<fs::path> const& so
                    auto const lhs_dir_len = lhs.rfind('/');
                    auto const rhs_dir_len = rhs.rfind('/');
 
-                   return lhs_dir_len == rhs_dir_len;
+                   if (lhs_dir_len == std::string::npos) {
+                       return lhs_dir_len == rhs_dir_len;
+                   }
+
+                   return std::string_view{lhs.c_str(), lhs_dir_len}
+                   == std::string_view{rhs.c_str(), rhs_dir_len};
                })
             | view::join(""s);
     }
