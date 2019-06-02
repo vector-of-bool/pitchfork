@@ -8,6 +8,7 @@ class PitchforkConanFile(CMakeConanFile):
         'Catch2/2.8.0@catchorg/stable',
         'spdlog/1.3.1@bincrafters/stable',
         'boost/1.70.0@conan/stable',
+        'range-v3/0.5.0@ericniebler/stable'
     )
     build_args = ['-DBUILD_SPEC=NO']
 
