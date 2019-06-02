@@ -5,9 +5,9 @@ class PitchforkConanFile(CMakeConanFile):
     name = 'pf'
     version = '0.1.0'
     requires = (
-        'catch2/2.3.0@bincrafters/stable',
-        'spdlog/1.1.0@bincrafters/stable',
-        'boost/1.68.0@conan/stable',
+        'Catch2/2.8.0@catchorg/stable',
+        'spdlog/1.3.1@bincrafters/stable',
+        'boost/1.70.0@conan/stable',
     )
     build_args = ['-DBUILD_SPEC=NO']
 
