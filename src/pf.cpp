@@ -317,6 +317,18 @@ private:
                                                                {'b', "build-system"},
                                                                _bs_map};
 
+    std::unordered_map<std::string, pf::update_grouping> _grouping_map{
+        {"none", pf::update_grouping::none},
+        {"smart", pf::update_grouping::smart},
+    };
+    args::MapFlag<std::string, pf::update_grouping> _grouping{
+        _cmd,
+        "none|smart",
+        "The generated list of files will follow the specified grouping. ",
+        {"grouping"},
+        _grouping_map,
+    };
+
 public:
     explicit cmd_update(cli_common& gl)
         : _cli{gl} {}
@@ -327,6 +339,11 @@ public:
         auto bs = _build_system.Get();
         if (bs == pf::build_system::unspecified) {
             bs = get_map_value("Build system whose files to update", _bs_map, "cmake");
+        }
+
+        auto grouping = _grouping.Get();
+        if (grouping == pf::update_grouping::unspecified) {
+            grouping = get_map_value("How to group the generated files", _grouping_map, "smart");
         }
 
         // Only CMake supported at this time
@@ -342,12 +359,12 @@ public:
 
             auto const            src_dir = base_dir / "src";
             std::vector<fs::path> sources = pf::glob_sources(src_dir);
-            pf::update_source_files(src_dir / "CMakeLists.txt", sources);
+            pf::update_source_files(src_dir / "CMakeLists.txt", sources, grouping);
 
             auto const tests_dir = base_dir / "tests";
             if (fs::exists(tests_dir)) {
                 std::vector<fs::path> test_sources = pf::glob_sources(tests_dir);
-                pf::update_source_files(tests_dir / "CMakeLists.txt", test_sources);
+                pf::update_source_files(tests_dir / "CMakeLists.txt", test_sources, grouping);
             }
         } catch (const std::system_error& e) {
             _cli.console->error("Failed to update project in {}: {}",

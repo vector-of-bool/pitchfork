@@ -1,6 +1,7 @@
 #include "./update_source_files.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cctype>
 #include <fstream>
 #include <iterator>
@@ -8,30 +9,54 @@
 #include <tuple>
 #include <utility>
 
+#include <range/v3/view/group_by.hpp>
+#include <range/v3/view/join.hpp>
+#include <range/v3/view/transform.hpp>
 #include <spdlog/fmt/ostr.h>
 #include <spdlog/spdlog.h>
 
-namespace fs = pf::fs;
+namespace view = ranges::view;
+namespace fs   = pf::fs;
+
+using namespace std::literals;
 
 namespace {
+auto transform_relative(fs::path const& base_dir) {
+    return view::transform([&base_dir](auto const& it) {
+        auto result = fs::relative(it, base_dir).string();
+        // TODO: evaluate if replacing `\` in filenames might cause a problem
+        std::replace(result.begin(), result.end(), '\\', '/');
+        return result;
+    });
+}
+
+constexpr bool smart_grouping = true;
 
 std::vector<std::string> relative_source_strings(std::vector<fs::path> const& source_files,
-                                                 fs::path const&              base_dir) {
-    std::vector<std::string> source_strings;
-    source_strings.reserve(source_files.size());
+                                                 fs::path const&              base_dir,
+                                                 pf::update_grouping          grouping) {
+    assert(grouping == pf::update_grouping::smart || grouping == pf::update_grouping::none);
 
-    std::transform(source_files.begin(),
-                   source_files.end(),
-                   std::back_inserter(source_strings),
-                   [&base_dir](auto const& path) {
-                       auto result = fs::relative(path, base_dir).string();
-                       // TODO: evaluate if replacing `\` in filenames might cause a problem
-                       std::replace(result.begin(), result.end(), '\\', '/');
+    auto result = source_files | ::transform_relative(base_dir);
 
-                       return result;
-                   });
+    if (grouping == pf::update_grouping::smart) {
+        return result | view::group_by([](std::string const& lhs, std::string const& rhs) {
+                   // Note: computes each length at least twice rather than just once.
+                   // Much simpler than combining with view::zip_with, though.
+                   auto const lhs_dir_len = lhs.rfind('/');
+                   auto const rhs_dir_len = rhs.rfind('/');
 
-    return source_strings;
+                   if (lhs_dir_len == std::string::npos) {
+                       return lhs_dir_len == rhs_dir_len;
+                   }
+
+                   return std::string_view{lhs.c_str(), lhs_dir_len}
+                   == std::string_view{rhs.c_str(), rhs_dir_len};
+               })
+            | view::join(""s);
+    }
+
+    return result;
 }
 
 constexpr std::string_view SourcesComment = "# sources\n";
@@ -116,9 +141,11 @@ auto insert_sources(std::string&                    cmakelists,
             first_iteration = false;
         }
 
-        insertion_point
-            = std::next(cmakelists.insert(insertion_point, indent.begin(), indent.end()),
-                        indent.size());
+        if (!source.empty()) {
+            insertion_point
+                = std::next(cmakelists.insert(insertion_point, indent.begin(), indent.end()),
+                            indent.size());
+        }
         insertion_point
             = std::next(cmakelists.insert(insertion_point, source.begin(), source.end()),
                         source.size());
@@ -148,7 +175,8 @@ write_sources(std::string&                    cmakelists,
 }  // namespace
 
 void pf::update_source_files(fs::path const&              cmakelists_file,
-                             std::vector<fs::path> const& source_files) {
+                             std::vector<fs::path> const& source_files,
+                             pf::update_grouping          grouping) {
     if (!fs::exists(cmakelists_file)) {
         throw std::system_error{
             std::make_error_code(std::errc::no_such_file_or_directory),
@@ -159,7 +187,7 @@ void pf::update_source_files(fs::path const&              cmakelists_file,
     std::string cmakelists = pf::slurp_file(cmakelists_file);
 
     std::vector<std::string> const source_strings
-        = ::relative_source_strings(source_files, cmakelists_file.parent_path());
+        = ::relative_source_strings(source_files, cmakelists_file.parent_path(), grouping);
 
     std::string const cmakelists_cpy = cmakelists;
 

@@ -2,3 +2,5 @@ build/
 .python-version
 *.pyc
 _pmm/
+.vscode/
+.vs/

@@ -11,6 +11,11 @@
 namespace fs = pf::fs;
 
 TEST_CASE("update source files") {
+    auto [grouping, result_filename] = GENERATE(table<::pf::update_grouping, std::string>({
+        {::pf::update_grouping::none, "CMakeLists.txt.after_update"},
+        {::pf::update_grouping::smart, "CMakeLists.txt.after_grouped_update"},
+    }));
+
     if (!fs::copy_file(fs::path{PF_TEST_SRCDIR "/existing/sample/project/src/CMakeLists.txt"},
                        fs::path{PF_TEST_BINDIR "/existing/sample/project/src/CMakeLists.txt"},
                        fs::copy_options::overwrite_existing)) {
@@ -29,15 +34,18 @@ TEST_CASE("update source files") {
             fs::path{PF_TEST_BINDIR "/existing/sample/project/src/project/source3.cpp"},
             fs::path{PF_TEST_BINDIR "/existing/sample/project/src/project/source4.cxx"},
             fs::path{PF_TEST_BINDIR "/existing/sample/project/src/project/source5.c++"},
+            fs::path{PF_TEST_BINDIR "/existing/sample/project/src/project/sub2/source1.c"},
+            fs::path{PF_TEST_BINDIR "/existing/sample/project/src/project/sub3/source1.c"},
             fs::path{PF_TEST_BINDIR "/existing/sample/project/src/project/subfolder/source1.c"},
             fs::path{PF_TEST_BINDIR "/existing/sample/project/src/project/subfolder/source2.cc"},
             fs::path{PF_TEST_BINDIR "/existing/sample/project/src/project/subfolder/source3.cpp"},
             fs::path{PF_TEST_BINDIR "/existing/sample/project/src/project/subfolder/source4.cxx"},
             fs::path{PF_TEST_BINDIR "/existing/sample/project/src/project/subfolder/source5.c++"},
-        });
+        },
+        grouping);
 
     std::ifstream expected_file{
-        fs::path{PF_TEST_BINDIR "/existing/sample/project/src/CMakeLists.txt.after_update"},
+        fs::path{PF_TEST_BINDIR "/existing/sample/project/src/" + result_filename},
     };
 
     std::ifstream actual_file{
