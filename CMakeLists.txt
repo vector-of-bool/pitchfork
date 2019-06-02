@@ -33,7 +33,7 @@ pmm(CONAN SETTINGS ${conan_std})
 conan_set_find_paths()
 
 # Find-package the Boost that Conan gave us
-find_package(Boost 1.68.0 REQUIRED)
+find_package(Boost 1.70.0 REQUIRED)
 
 # Other deps not controlled by Conan
 find_package(Filesystem REQUIRED)
