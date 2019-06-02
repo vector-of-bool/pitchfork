@@ -5,7 +5,7 @@ set(PF_TEST_BINDIR "${CMAKE_CURRENT_BINARY_DIR}")
 set(PF_TEST_SRCDIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_library(pf-test-lib STATIC test-main.cpp compare_fs.hpp compare_fs.cpp)
-target_link_libraries(pf-test-lib PUBLIC Catch2::Catch2 pf::pitchfork)
+target_link_libraries(pf-test-lib PUBLIC Catch2::Catch2 pf::pitchfork range-v3)
 target_compile_definitions(pf-test-lib
     PUBLIC
         "PF_TEST_BINDIR=\"${CMAKE_CURRENT_BINARY_DIR}\""
@@ -37,13 +37,14 @@ endfunction()
 
 function(pf_add_query_test ID)
     set(options)
-    set(list_args PASS_REGULAR_EXPRESSION FAIL_REGULAR_EXPRESSION)
+    set(args)
+    set(list_args COMMAND PASS_REGULAR_EXPRESSION FAIL_REGULAR_EXPRESSION)
 
     cmake_parse_arguments(PARSE_ARGV 1 ARG "${options}" "${args}" "${list_args}")
 
     add_test(
         NAME "query:${ID}"
-        COMMAND pf query "${ID}"
+        COMMAND ${ARG_COMMAND}
     )
     set_tests_properties("query:${ID}"
         PROPERTIES
@@ -59,6 +60,15 @@ pf_add_test_exe(existing
     existing/update_source_files.cpp)
 configure_directory(existing/sample)
 
+pf_add_test_exe(test.lib
+    fs/ascending_paths.cpp
+)
+
 pf_add_query_test(project.root
+    COMMAND pf query project.root
     PASS_REGULAR_EXPRESSION "${PROJECT_SOURCE_DIR}"
+)
+pf_add_query_test(project.root.specified
+    COMMAND pf "--base-dir=/some/absolute/path" query project.root
+    PASS_REGULAR_EXPRESSION "/some/absolute/path" "C:\\\\some\\\\absolute\\\\path"
 )

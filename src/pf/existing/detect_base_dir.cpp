@@ -5,7 +5,7 @@
 #include <string>
 #include <utility>
 
-#include <boost/range/iterator_range.hpp>
+#include <range/v3/algorithm/find_if.hpp>
 
 namespace fs = pf::fs;
 
@@ -30,25 +30,20 @@ std::optional<fs::path> parse_cmakecache_homedir(fs::path const& cmakecache) {
 }  // namespace
 
 std::optional<fs::path> pf::detect_base_dir(fs::path from_dir) {
-    auto cur_dir = std::find_if(pf::ascending_iterator{from_dir},
-                                pf::ascending_iterator{},
-                                [](auto const& dir) {
-                                    return fs::exists(dir / "CMakeLists.txt")
-                                        || fs::exists(dir / "CMakeCache.txt");
-                                });
+    auto ascending_from = pf::ascending_paths(from_dir);
+    auto cur_dir        = ranges::find_if(ascending_from, [](auto const& dir) {
+        return fs::exists(dir / "CMakeLists.txt") || fs::exists(dir / "CMakeCache.txt");
+    });
 
-    if (cur_dir == pf::ascending_iterator{}) {
+    // Iterator always valid, but may be root dir `/`.
+    if (fs::exists(*cur_dir / "CMakeLists.txt")) {
+        auto ascending_cur = pf::ascending_paths(*cur_dir);
+        return *ranges::find_if(ascending_cur, [](auto const& path) {
+            return !fs::exists(path.parent_path() / "CMakeLists.txt");
+        });
+    } else if (fs::exists(*cur_dir / "CMakeCache.txt")) {
+        return ::parse_cmakecache_homedir(*cur_dir / "CMakeCache.txt");
+    } else {
         return std::nullopt;
     }
-
-    if (fs::exists(*cur_dir / "CMakeLists.txt")) {
-        return *std::find_if(pf::ascending_iterator{*cur_dir},
-                             pf::ascending_iterator{},
-                             [](auto const& path) {
-                                 return !fs::exists(path.parent_path() / "CMakeLists.txt");
-                             });
-    }
-
-    // There's a CMakeCache
-    return ::parse_cmakecache_homedir(*cur_dir / "CMakeCache.txt");
 }

@@ -3,3 +3,4 @@ build/
 *.pyc
 _pmm/
 .vscode/
+.vs/
