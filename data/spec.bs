@@ -185,7 +185,7 @@ form a single *physical component*.
 namespace acme {
 
 // Forward-declare the private member data type
-namespace detail { class connection_ipml; }
+namespace detail { class connection_impl; }
 
 // The wrapper class
 class connection {
