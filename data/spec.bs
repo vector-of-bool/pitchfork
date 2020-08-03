@@ -786,7 +786,7 @@ requirements is that the chosen build system support the layout herein defined.
 # Libraries # {#libraries}
 
 For library projects, a source tree should correspond to *exactly one* library.
-That is, *at most one one* linkable result, and *exactly one* public include
+That is, *at most one* linkable result, and *exactly one* public include
 directory. A single `#include` tree must not require linking more than one
 library to access all symbols exported from that tree.
 
