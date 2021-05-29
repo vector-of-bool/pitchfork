@@ -761,7 +761,7 @@ the project which build upon the main component(s). This may include submodules
 that are not part of the project's "default" build, or otherwise impose special
 requirements to be used.
 
-For example, the following might be candidates for `extra/` rather than regular
+For example, the following might be candidates for `extras/` rather than regular
 components:
 
 1. "Language bindings" or extra libraries that provide integrations of the
